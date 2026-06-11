@@ -1,0 +1,75 @@
+{{-- Grid produk kasir. Membaca scope Alpine dari komponen induk (cashier). --}}
+<div class="flex h-full flex-col">
+    {{-- Search + toggle tampilan --}}
+    <div class="mb-4 flex items-center gap-2">
+        <div class="flex-1">
+            <x-ui.search-input placeholder="Cari produk (nama / SKU)..." model="productSearch" />
+        </div>
+
+        {{-- Switch mode card / list --}}
+        <div class="inline-flex flex-shrink-0 rounded-lg border border-gray-200 p-0.5">
+            <button type="button" @click="setView('card')"
+                :class="viewMode === 'card' ? 'bg-primary-50 text-primary-600' : 'text-gray-400 hover:text-gray-600'"
+                class="rounded-md p-1.5 transition" title="Tampilan kartu">
+                <x-heroicon-o-squares-2x2 class="h-5 w-5" />
+            </button>
+            <button type="button" @click="setView('list')"
+                :class="viewMode === 'list' ? 'bg-primary-50 text-primary-600' : 'text-gray-400 hover:text-gray-600'"
+                class="rounded-md p-1.5 transition" title="Tampilan daftar">
+                <x-heroicon-o-list-bullet class="h-5 w-5" />
+            </button>
+        </div>
+    </div>
+
+    {{-- Konten --}}
+    <div class="-mr-1 flex-1 overflow-y-auto pr-1 scrollbar-thin">
+        <div x-show="filteredProducts.length === 0" class="flex h-40 items-center justify-center text-sm text-gray-400">
+            Produk tidak ditemukan.
+        </div>
+
+        {{-- Mode kartu --}}
+        <div x-show="viewMode === 'card'" class="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-4">
+            <template x-for="p in filteredProducts" :key="p.id">
+                <button
+                    type="button"
+                    @click="addProduct(p)"
+                    :disabled="p.stock <= 0"
+                    class="group flex flex-col rounded-xl border border-gray-200 bg-white p-3 text-left transition hover:border-primary-300 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                    <div class="mb-2 flex aspect-square items-center justify-center rounded-lg bg-gray-50 text-gray-300 group-hover:bg-primary-50 group-hover:text-primary-400">
+                        <x-heroicon-o-cube class="h-8 w-8" />
+                    </div>
+                    <span class="line-clamp-2 text-xs font-medium text-gray-800" x-text="p.name"></span>
+                    <span class="mt-1 text-sm font-semibold text-primary-600" x-text="rupiah(p.prices[priceType])"></span>
+                    <span class="mt-0.5 text-[11px]" :class="p.stock <= p.min_stock ? 'text-danger-500' : 'text-gray-400'">
+                        Stok: <span x-text="p.stock"></span>
+                    </span>
+                </button>
+            </template>
+        </div>
+
+        {{-- Mode daftar --}}
+        <div x-show="viewMode === 'list'" class="space-y-2">
+            <template x-for="p in filteredProducts" :key="p.id">
+                <button
+                    type="button"
+                    @click="addProduct(p)"
+                    :disabled="p.stock <= 0"
+                    class="group flex w-full items-center gap-3 rounded-lg border border-gray-200 bg-white p-2.5 text-left transition hover:border-primary-300 hover:bg-primary-50/40 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                    <span class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-gray-50 text-gray-300 group-hover:bg-primary-50 group-hover:text-primary-400">
+                        <x-heroicon-o-cube class="h-5 w-5" />
+                    </span>
+                    <div class="min-w-0 flex-1">
+                        <p class="truncate text-sm font-medium text-gray-800" x-text="p.name"></p>
+                        <p class="text-[11px]" :class="p.stock <= p.min_stock ? 'text-danger-500' : 'text-gray-400'">
+                            SKU: <span x-text="p.sku || '—'"></span> &middot; Stok: <span x-text="p.stock"></span>
+                        </p>
+                    </div>
+                    <span class="flex-shrink-0 text-sm font-semibold text-primary-600" x-text="rupiah(p.prices[priceType])"></span>
+                    <x-heroicon-o-plus-circle class="h-5 w-5 flex-shrink-0 text-gray-300 transition group-hover:text-primary-500" />
+                </button>
+            </template>
+        </div>
+    </div>
+</div>
