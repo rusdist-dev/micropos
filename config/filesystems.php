@@ -36,9 +36,12 @@ return [
             'throw' => false,
         ],
 
+        // Disk publik diarahkan langsung ke public/storage agar tidak butuh
+        // `storage:link` (symlink). Cocok untuk shared hosting yang menonaktifkan
+        // fungsi PHP symlink(). File yang diunggah langsung dapat diakses via /storage.
         'public' => [
             'driver' => 'local',
-            'root' => storage_path('app/public'),
+            'root' => public_path('storage'),
             'url' => env('APP_URL').'/storage',
             'visibility' => 'public',
             'throw' => false,
