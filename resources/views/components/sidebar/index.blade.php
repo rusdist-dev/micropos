@@ -6,6 +6,7 @@
         ],
         'DATA' => [
             ['label' => 'Produk',     'icon' => 'cube',                'route' => 'products.index',     'active' => 'products.*',     'permission' => 'products.view'],
+            ['label' => 'Kategori',   'icon' => 'rectangle-stack',     'route' => 'categories.index',   'active' => 'categories.*',   'permission' => 'categories.view'],
             ['label' => 'Tipe Harga', 'icon' => 'tag',                 'route' => 'price-types.index',  'active' => 'price-types.*',  'permission' => 'price-types.view'],
             ['label' => 'Pelanggan',  'icon' => 'users',               'route' => 'customers.index',    'active' => 'customers.*',    'permission' => 'customers.view'],
             ['label' => 'Pemasok',    'icon' => 'truck',               'route' => 'suppliers.index',    'active' => 'suppliers.*',    'permission' => 'suppliers.view'],
@@ -23,10 +24,13 @@
         'PENGATURAN' => [
             ['label' => 'Pengguna',  'icon' => 'user-group',          'route' => 'users.index',        'active' => 'users.*',       'permission' => 'users.view'],
             ['label' => 'Role & Akses', 'icon' => 'shield-check',      'route' => 'roles.index',        'active' => 'roles.*',       'permission' => 'roles.view'],
+            ['label' => 'Konfigurasi',  'icon' => 'cog-6-tooth',       'route' => 'settings.index',     'active' => 'settings.*',    'permission' => 'settings.view'],
         ],
     ];
 
     $user = auth()->user();
+    $logoUrl = $appSettings->logoUrl();
+    $storeName = $appSettings->storeName();
 @endphp
 
 <aside
@@ -38,11 +42,15 @@
 >
     {{-- Brand / Logo --}}
     <div class="flex h-16 items-center gap-2 border-b border-gray-200 px-4">
-        <span class="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-primary-500 text-white">
-            <x-heroicon-s-bolt class="h-5 w-5" />
-        </span>
-        <span class="text-lg font-bold tracking-tight text-gray-900" x-show="!collapsed" x-transition.opacity>
-            Micro<span class="text-primary-600">POS</span>
+        @if ($logoUrl)
+            <img src="{{ $logoUrl }}" alt="{{ $storeName }}" class="h-9 w-9 flex-shrink-0 rounded-lg object-contain" />
+        @else
+            <span class="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-primary-500 text-white">
+                <x-heroicon-s-bolt class="h-5 w-5" />
+            </span>
+        @endif
+        <span class="truncate text-lg font-bold tracking-tight text-gray-900" x-show="!collapsed" x-transition.opacity>
+            {{ $storeName }}
         </span>
     </div>
 

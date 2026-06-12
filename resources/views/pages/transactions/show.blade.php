@@ -70,6 +70,12 @@
 
                 <x-ui.card title="Pembayaran">
                     <dl class="space-y-3 text-sm">
+                        <template x-if="trx?.discount > 0">
+                            <div class="space-y-3">
+                                <div class="flex justify-between"><dt class="text-gray-500">Subtotal</dt><dd class="text-gray-800" x-text="window.rupiah(trx?.subtotal)"></dd></div>
+                                <div class="flex justify-between"><dt class="text-gray-500">Diskon</dt><dd class="text-danger-600" x-text="'− ' + window.rupiah(trx?.discount)"></dd></div>
+                            </div>
+                        </template>
                         <div class="flex justify-between"><dt class="text-gray-500">Total</dt><dd class="font-semibold text-gray-900" x-text="window.rupiah(trx?.total)"></dd></div>
                         <div class="flex justify-between"><dt class="text-gray-500">Bayar</dt><dd class="text-gray-800" x-text="window.rupiah(trx?.payment_amount)"></dd></div>
                         <div class="flex justify-between border-t border-gray-100 pt-3"><dt class="text-gray-500">Kembalian</dt><dd class="font-semibold text-primary-600" x-text="window.rupiah(trx?.change_amount)"></dd></div>

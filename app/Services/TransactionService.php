@@ -25,13 +25,13 @@ class TransactionService
      * Buat transaksi: validasi stok, snapshot harga, hitung total,
      * generate invoice, dan kurangi stok — seluruhnya dalam satu DB transaction.
      *
-     * @param  array{customer_id?:int|null,payment_amount:int|float,note?:string|null,items:array<int,array<string,mixed>>}  $data
+     * @param  array{customer_id?:int|null,discount?:int|float|null,payment_amount:int|float,note?:string|null,items:array<int,array<string,mixed>>}  $data
      */
     public function create(array $data, User $kasir): Transaction
     {
         return DB::transaction(function () use ($data, $kasir) {
             $resolvedItems = [];
-            $total = 0;
+            $subtotal = 0;
 
             foreach ($data['items'] as $index => $item) {
                 $type = $item['item_type'];
@@ -43,9 +43,19 @@ class TransactionService
                     $resolved = $this->resolveServiceItem($item, $qty);
                 }
 
-                $total += $resolved['subtotal'];
+                $subtotal += $resolved['subtotal'];
                 $resolvedItems[] = $resolved;
             }
+
+            // Diskon tingkat transaksi (input bebas oleh kasir). Tidak boleh melebihi subtotal.
+            $discount = max(0.0, (float) ($data['discount'] ?? 0));
+            if ($discount > $subtotal) {
+                throw ValidationException::withMessages([
+                    'discount' => 'Diskon tidak boleh melebihi subtotal (' . number_format($subtotal, 0, ',', '.') . ').',
+                ]);
+            }
+
+            $total = $subtotal - $discount;
 
             $payment = (float) $data['payment_amount'];
             if ($payment < $total) {
@@ -58,6 +68,8 @@ class TransactionService
                 'invoice_number' => $this->generateInvoiceNumber(),
                 'kasir_id' => $kasir->id,
                 'customer_id' => $data['customer_id'] ?? null,
+                'subtotal' => $subtotal,
+                'discount' => $discount,
                 'total' => $total,
                 'payment_amount' => $payment,
                 'change_amount' => $payment - $total,

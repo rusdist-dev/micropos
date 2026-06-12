@@ -6,13 +6,30 @@ import Chart from 'chart.js/auto';
 // Chart.js tersedia global agar bisa diinisialisasi di dalam komponen Alpine.
 window.Chart = Chart;
 
-// Warna palet (selaras dengan tailwind.config.js) untuk dipakai chart.
+// Konfigurasi toko diinjeksikan server-side via partials/theme.blade.php
+// (window.posSettings). Sediakan fallback agar aman bila belum tersedia.
+window.posSettings = window.posSettings || {};
+
+// Hex (#rrggbb / #rgb) -> {r,g,b}. Fallback ke teal-500 bila tidak valid.
+window.hexToRgb = (hex) => {
+    let h = String(hex || '').trim().replace('#', '');
+    if (h.length === 3) h = h.split('').map((c) => c + c).join('');
+    if (! /^[0-9a-fA-F]{6}$/.test(h)) h = '14b8a6';
+    return { r: parseInt(h.slice(0, 2), 16), g: parseInt(h.slice(2, 4), 16), b: parseInt(h.slice(4, 6), 16) };
+};
+
+// Warna palet untuk chart. Primary mengikuti tema yang dikonfigurasi.
+const primaryHex = window.posSettings.primaryColor || '#14b8a6';
+const primaryRgb = window.hexToRgb(primaryHex);
 window.posColors = {
-    primary: '#14b8a6',
+    primary: primaryHex,
     primaryLight: '#99f6e4',
     warning: '#f59e0b',
     danger: '#ef4444',
     gray: '#9ca3af',
+    // Channel "r, g, b" + helper rgba() untuk gradient/fill mengikuti warna konfigurasi.
+    primaryChannels: `${primaryRgb.r}, ${primaryRgb.g}, ${primaryRgb.b}`,
+    primaryRgba: (alpha) => `rgba(${primaryRgb.r}, ${primaryRgb.g}, ${primaryRgb.b}, ${alpha})`,
 };
 
 // Format Rupiah ringkas, dipakai lintas komponen Alpine.
@@ -98,6 +115,21 @@ document.addEventListener('alpine:init', () => {
         date(trx) {
             return trx.created_at ? new Date(trx.created_at).toLocaleString('id-ID') : new Date().toLocaleString('id-ID');
         },
+        // Konfigurasi toko dari window.posSettings (server-side), dengan fallback.
+        store() {
+            const s = window.posSettings || {};
+            return {
+                name: s.storeName || 'MicroPOS',
+                address: s.storeAddress || '',
+                phone: s.storePhone || '',
+                footer: s.receiptFooter || 'Terima kasih atas kunjungan Anda',
+                logoUrl: s.logoUrl || '',
+                color: s.primaryColor || '#0d9488',
+            };
+        },
+        esc(v) {
+            return String(v ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+        },
         print(trx, size = 'thermal') {
             if (!trx) return;
             const html = size === 'a4' ? this.a4Html(trx) : this.thermalHtml(trx);
@@ -113,10 +145,15 @@ document.addEventListener('alpine:init', () => {
 
         thermalHtml(trx) {
             const m = (v) => this.money(v);
+            const e = (v) => this.esc(v);
+            const store = this.store();
             const rows = (trx.items || [])
-                .map((i) => `<tr><td>${i.item_name}<br><span class="muted">${i.qty} x ${m(i.price_snapshot)}</span></td><td class="r">${m(i.subtotal)}</td></tr>`)
+                .map((i) => `<tr><td>${e(i.item_name)}<br><span class="muted">${i.qty} x ${m(i.price_snapshot)}</span></td><td class="r">${m(i.subtotal)}</td></tr>`)
                 .join('');
-            return `<!doctype html><html><head><meta charset="utf-8"><title>${trx.invoice_number || 'Struk'}</title>
+            const logo = store.logoUrl ? `<img src="${e(store.logoUrl)}" class="logo" alt="">` : '';
+            const address = store.address ? `<div class="center muted">${e(store.address)}</div>` : '';
+            const phone = store.phone ? `<div class="center muted">${e(store.phone)}</div>` : '';
+            return `<!doctype html><html><head><meta charset="utf-8"><title>${e(trx.invoice_number) || 'Struk'}</title>
                 <style>
                     @page { size: 80mm auto; margin: 3mm; }
                     * { font-family: 'Courier New', monospace; font-size: 12px; }
@@ -124,6 +161,7 @@ document.addEventListener('alpine:init', () => {
                     h1 { font-size: 16px; text-align: center; margin: 0 0 2px; }
                     .center { text-align: center; }
                     .muted { color: #555; font-size: 11px; }
+                    .logo { display: block; max-height: 48px; margin: 0 auto 4px; }
                     table { width: 100%; border-collapse: collapse; }
                     td { padding: 2px 0; vertical-align: top; }
                     .r { text-align: right; }
@@ -131,81 +169,95 @@ document.addEventListener('alpine:init', () => {
                     .row { display: flex; justify-content: space-between; }
                     .bold { font-weight: bold; }
                 </style></head><body>
-                <h1>MicroPOS</h1>
-                <div class="center muted">Point of Sale</div>
+                ${logo}
+                <h1>${e(store.name)}</h1>
+                ${address}
+                ${phone}
                 <hr>
-                <div class="row"><span>No</span><span>${trx.invoice_number || '-'}</span></div>
+                <div class="row"><span>No</span><span>${e(trx.invoice_number) || '-'}</span></div>
                 <div class="row"><span>Tanggal</span><span>${this.date(trx)}</span></div>
-                <div class="row"><span>Kasir</span><span>${trx.kasir_name || '-'}</span></div>
-                <div class="row"><span>Pelanggan</span><span>${trx.customer_name || 'Umum'}</span></div>
+                <div class="row"><span>Kasir</span><span>${e(trx.kasir_name) || '-'}</span></div>
+                <div class="row"><span>Pelanggan</span><span>${e(trx.customer_name) || 'Umum'}</span></div>
                 <hr>
                 <table>${rows}</table>
                 <hr>
+                ${Number(trx.discount) > 0 ? `<div class="row"><span>Subtotal</span><span>${m(trx.subtotal)}</span></div>
+                <div class="row"><span>Diskon</span><span>- ${m(trx.discount)}</span></div>` : ''}
                 <div class="row bold"><span>TOTAL</span><span>${m(trx.total)}</span></div>
                 <div class="row"><span>Bayar</span><span>${m(trx.payment_amount)}</span></div>
                 <div class="row"><span>Kembali</span><span>${m(trx.change_amount)}</span></div>
                 <hr>
-                <div class="center muted">Terima kasih atas kunjungan Anda</div>
+                <div class="center muted">${e(store.footer)}</div>
                 </body></html>`;
         },
 
         a4Html(trx) {
             const m = (v) => this.money(v);
+            const e = (v) => this.esc(v);
+            const store = this.store();
             const rows = (trx.items || [])
                 .map((i, idx) => `<tr>
                     <td class="c">${idx + 1}</td>
-                    <td>${i.item_name}${i.price_type_used ? '<br><span class="muted">' + i.price_type_used + '</span>' : ''}</td>
+                    <td>${e(i.item_name)}${i.price_type_used ? '<br><span class="muted">' + e(i.price_type_used) + '</span>' : ''}</td>
                     <td class="r">${m(i.price_snapshot)}</td>
                     <td class="c">${i.qty}</td>
                     <td class="r">${m(i.subtotal)}</td>
                 </tr>`)
                 .join('');
-            return `<!doctype html><html><head><meta charset="utf-8"><title>${trx.invoice_number || 'Invoice'}</title>
+            const brand = store.logoUrl
+                ? `<img src="${e(store.logoUrl)}" style="max-height:56px" alt="">`
+                : `<div class="brand">${e(store.name)}</div>`;
+            const subline = [store.address, store.phone].filter(Boolean).map(e).join('<br>');
+            return `<!doctype html><html><head><meta charset="utf-8"><title>${e(trx.invoice_number) || 'Invoice'}</title>
                 <style>
                     @page { size: A4; margin: 15mm; }
                     * { font-family: Arial, Helvetica, sans-serif; color: #111; box-sizing: border-box; }
                     body { margin: 0; font-size: 13px; }
-                    .head { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #0d9488; padding-bottom: 12px; }
-                    .brand { font-size: 24px; font-weight: 700; color: #0d9488; }
+                    .head { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid ${store.color}; padding-bottom: 12px; }
+                    .brand { font-size: 24px; font-weight: 700; color: ${store.color}; }
+                    .store-name { font-size: 15px; font-weight: 700; margin-top: 4px; }
                     .muted { color: #666; }
                     .title { text-align: right; }
                     .title h2 { margin: 0; font-size: 18px; letter-spacing: 1px; }
                     .meta { display: flex; justify-content: space-between; margin: 16px 0; }
                     .meta div { line-height: 1.6; }
                     table { width: 100%; border-collapse: collapse; margin-top: 8px; }
-                    th { background: #f0fdfa; text-align: left; padding: 8px; font-size: 12px; border-bottom: 2px solid #ccfbf1; }
-                    td { padding: 8px; border-bottom: 1px solid #eee; vertical-align: top; }
+                    th { background: #f7f7f7; text-align: left; padding: 4px 8px; font-size: 12px; border-bottom: 2px solid ${store.color}; }
+                    td { padding: 2px 8px; border-bottom: 1px solid #eee; vertical-align: top; line-height: 1.25; }
                     th.r, td.r { text-align: right; } th.c, td.c { text-align: center; }
                     .muted { font-size: 11px; }
                     .totals { width: 280px; margin-left: auto; margin-top: 12px; }
                     .totals .row { display: flex; justify-content: space-between; padding: 4px 8px; }
-                    .totals .grand { border-top: 2px solid #0d9488; font-weight: 700; font-size: 15px; }
+                    .totals .grand { border-top: 2px solid ${store.color}; font-weight: 700; font-size: 15px; }
                     .foot { margin-top: 40px; text-align: center; color: #666; font-size: 12px; }
                 </style></head><body>
                 <div class="head">
                     <div>
-                        <div class="brand">MicroPOS</div>
-                        <div class="muted">Point of Sale<br>Jl. Contoh No. 1, Indonesia</div>
+                        ${brand}
+                        ${store.logoUrl ? `<div class="store-name">${e(store.name)}</div>` : ''}
+                        ${subline ? `<div class="muted">${subline}</div>` : ''}
                     </div>
                     <div class="title">
                         <h2>INVOICE</h2>
-                        <div class="muted">${trx.invoice_number || '-'}</div>
+                        <div class="muted">${e(trx.invoice_number) || '-'}</div>
                     </div>
                 </div>
                 <div class="meta">
-                    <div><b>Pelanggan</b><br>${trx.customer_name || 'Pelanggan Umum'}</div>
-                    <div style="text-align:right"><b>Tanggal:</b> ${this.date(trx)}<br><b>Kasir:</b> ${trx.kasir_name || '-'}</div>
+                    <div><b>Pelanggan</b><br>${e(trx.customer_name) || 'Pelanggan Umum'}</div>
+                    <div style="text-align:right"><b>Tanggal:</b> ${this.date(trx)}<br><b>Kasir:</b> ${e(trx.kasir_name) || '-'}</div>
                 </div>
                 <table>
                     <thead><tr><th class="c">#</th><th>Item</th><th class="r">Harga</th><th class="c">Qty</th><th class="r">Subtotal</th></tr></thead>
                     <tbody>${rows}</tbody>
                 </table>
                 <div class="totals">
+                    ${Number(trx.discount) > 0 ? `<div class="row"><span>Subtotal</span><span>${m(trx.subtotal)}</span></div>
+                    <div class="row"><span>Diskon</span><span>− ${m(trx.discount)}</span></div>` : ''}
                     <div class="row"><span>Total</span><span>${m(trx.total)}</span></div>
                     <div class="row"><span>Bayar</span><span>${m(trx.payment_amount)}</span></div>
                     <div class="row grand"><span>Kembalian</span><span>${m(trx.change_amount)}</span></div>
                 </div>
-                <div class="foot">Terima kasih atas kunjungan Anda.</div>
+                <div class="foot">${e(store.footer)}</div>
                 </body></html>`;
         },
     });

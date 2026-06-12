@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Web\CashierController;
+use App\Http\Controllers\Web\CategoryController;
 use App\Http\Controllers\Web\CustomerController;
 use App\Http\Controllers\Web\DashboardController;
 use App\Http\Controllers\Web\PriceTypeController;
@@ -9,6 +10,7 @@ use App\Http\Controllers\Web\ProductController;
 use App\Http\Controllers\Web\ReturnController;
 use App\Http\Controllers\Web\RoleController;
 use App\Http\Controllers\Web\ServiceController;
+use App\Http\Controllers\Web\SettingController;
 use App\Http\Controllers\Web\StockOpnameController;
 use App\Http\Controllers\Web\SupplierController;
 use App\Http\Controllers\Web\SupplyController;
@@ -36,6 +38,11 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/products', [ProductController::class, 'index'])->name('products.index');
     Route::get('/products/create', [ProductController::class, 'create'])->name('products.create');
     Route::get('/products/{id}/edit', [ProductController::class, 'edit'])->name('products.edit');
+
+    // Kategori (master)
+    Route::get('/categories', [CategoryController::class, 'index'])->name('categories.index');
+    Route::get('/categories/create', [CategoryController::class, 'create'])->name('categories.create');
+    Route::get('/categories/{id}/edit', [CategoryController::class, 'edit'])->name('categories.edit');
 
     // Pelanggan
     Route::get('/customers', [CustomerController::class, 'index'])->name('customers.index');
@@ -76,6 +83,11 @@ Route::middleware(['auth'])->group(function () {
     // Riwayat Transaksi
     Route::get('/transactions', [TransactionController::class, 'index'])->name('transactions.index');
     Route::get('/transactions/{id}', [TransactionController::class, 'show'])->name('transactions.show');
+
+    // Konfigurasi Toko
+    Route::get('/settings', [SettingController::class, 'index'])
+        ->middleware('permission:settings.view')
+        ->name('settings.index');
 
     // Role & Hak Akses
     Route::get('/roles', [RoleController::class, 'index'])->name('roles.index');

@@ -12,6 +12,7 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->string('sku', 50)->nullable()->unique();
+            $table->foreignId('category_id')->nullable()->constrained('categories')->nullOnDelete();
             $table->string('brand')->nullable();
             $table->integer('stock')->default(0);
             $table->integer('min_stock')->default(0);

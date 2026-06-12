@@ -15,6 +15,8 @@ class ProductResource extends JsonResource
             'id' => $this->id,
             'name' => $this->name,
             'sku' => $this->sku,
+            'category_id' => $this->category_id,
+            'category_name' => $this->whenLoaded('category', fn () => $this->category?->name),
             'brand' => $this->brand,
             'stock' => $this->stock,
             'min_stock' => $this->min_stock,

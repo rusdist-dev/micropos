@@ -8,6 +8,8 @@
             search: '',
             brand: '',
             brands: [],
+            category: '',
+            categories: [],
             page: 1,
             deleting: null,
             showDelete: false,
@@ -44,6 +46,7 @@
                     const params = new URLSearchParams({ page: this.page, per_page: 10 });
                     if (this.search) params.set('search', this.search);
                     if (this.brand) params.set('brand', this.brand);
+                    if (this.category) params.set('category_id', this.category);
                     const res = await window.api.get('/api/products?' + params.toString());
                     this.items = res.data;
                     this.meta = res.meta;
@@ -57,6 +60,12 @@
                 try {
                     const res = await window.api.get('/api/products?per_page=200');
                     this.brands = [...new Set(res.data.map((p) => p.brand).filter(Boolean))].sort();
+                } catch (e) { /* abaikan */ }
+            },
+            async loadCategories() {
+                try {
+                    const res = await window.api.get('/api/categories?all=1');
+                    this.categories = res.data;
                 } catch (e) { /* abaikan */ }
             },
             goToPage(p) {
@@ -77,7 +86,7 @@
                 }
             },
         }"
-        x-init="$nextTick(() => { const f = window.flash.pop(); if (f) $store.toasts.push(f.message, f.type); }); load(); loadBrands(); $watch('search', () => { page = 1; load(); }); $watch('brand', () => { page = 1; load(); })"
+        x-init="$nextTick(() => { const f = window.flash.pop(); if (f) $store.toasts.push(f.message, f.type); }); load(); loadBrands(); loadCategories(); $watch('search', () => { page = 1; load(); }); $watch('brand', () => { page = 1; load(); }); $watch('category', () => { page = 1; load(); })"
     >
         {{-- Toolbar --}}
         <div class="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -85,6 +94,10 @@
                 <div class="sm:w-72">
                     <x-ui.search-input placeholder="Cari nama atau SKU produk..." model="search" />
                 </div>
+                <select x-model="category" class="rounded-lg border-gray-300 text-sm shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:w-48">
+                    <option value="">Semua Kategori</option>
+                    <template x-for="c in categories" :key="c.id"><option :value="c.id" x-text="c.name"></option></template>
+                </select>
                 <select x-model="brand" class="rounded-lg border-gray-300 text-sm shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:w-48">
                     <option value="">Semua Merek</option>
                     <template x-for="b in brands" :key="b"><option :value="b" x-text="b"></option></template>
@@ -110,16 +123,17 @@
             <x-ui.table>
                 <x-slot:head>
                     <x-ui.th>Produk</x-ui.th>
-                    <x-ui.th>SKU</x-ui.th>
+                    <x-ui.th>Kategori</x-ui.th>
                     <x-ui.th>Merek</x-ui.th>
-                    <x-ui.th align="right">Harga Default</x-ui.th>
+                    <x-ui.th align="right">Modal</x-ui.th>
+                    <x-ui.th>Harga per Tipe</x-ui.th>
                     <x-ui.th align="center">Stok</x-ui.th>
-                    <x-ui.th align="center">Status</x-ui.th>
                     <x-ui.th align="right">Aksi</x-ui.th>
                 </x-slot:head>
 
                 <template x-for="p in items" :key="p.id">
-                    <tr class="hover:bg-gray-50">
+                    {{-- Baris produk nonaktif diredupkan (pengganti kolom status). --}}
+                    <tr class="hover:bg-gray-50" :class="{ 'opacity-50': !p.is_active }">
                         <td class="px-4 py-1">
                             <div class="flex items-center gap-3">
                                 <template x-if="p.image_url">
@@ -131,17 +145,29 @@
                                 <span class="text-sm font-medium text-gray-800" x-text="p.name"></span>
                             </div>
                         </td>
-                        <td class="px-4 py-1 text-sm text-gray-500" x-text="p.sku || '—'"></td>
+                        <td class="px-4 py-1">
+                            <span x-show="p.category_name" class="inline-flex items-center rounded-full bg-primary-50 px-2 py-0.5 text-xs font-medium text-primary-700 ring-1 ring-inset ring-primary-600/20" x-text="p.category_name"></span>
+                            <span x-show="!p.category_name" class="text-sm text-gray-400">—</span>
+                        </td>
                         <td class="px-4 py-1 text-sm text-gray-500" x-text="p.brand || '—'"></td>
-                        <td class="px-4 py-1 text-right text-sm font-medium text-gray-800" x-text="p.default_price ? window.rupiah(p.default_price.price) : '—'"></td>
+                        <td class="whitespace-nowrap px-4 py-1 text-right text-sm text-gray-600" x-text="window.rupiah(p.purchase_price)"></td>
+                        <td class="whitespace-nowrap px-4 py-1">
+                            <div class="flex flex-col gap-0.5">
+                                <template x-for="pr in p.prices" :key="pr.price_type">
+                                    {{-- Harga default disorot dengan teks primary tebal (tanpa tag). --}}
+                                    <div class="flex items-center gap-1.5 text-xs">
+                                        <span x-text="(pr.price_type_name || pr.price_type) + ':'"
+                                            :class="pr.is_active_default ? 'font-semibold text-primary-600' : 'text-gray-400'"></span>
+                                        <span x-text="window.rupiah(pr.price)"
+                                            :class="pr.is_active_default ? 'font-bold text-primary-700' : 'font-medium text-gray-700'"></span>
+                                    </div>
+                                </template>
+                                <span x-show="!p.prices || p.prices.length === 0" class="text-sm text-gray-400">—</span>
+                            </div>
+                        </td>
                         <td class="px-4 py-1 text-center">
                             <span class="inline-flex min-w-9 justify-center rounded-md px-2 py-0.5 text-xs font-medium"
                                 :class="p.is_low_stock ? 'bg-danger-50 text-danger-700' : 'bg-gray-100 text-gray-600'" x-text="p.stock"></span>
-                        </td>
-                        <td class="px-4 py-1 text-center">
-                            <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset"
-                                :class="p.is_active ? 'bg-primary-50 text-primary-700 ring-primary-600/20' : 'bg-gray-100 text-gray-500 ring-gray-500/20'"
-                                x-text="p.is_active ? 'Aktif' : 'Nonaktif'"></span>
                         </td>
                         <td class="px-4 py-1">
                             <div class="flex items-center justify-end gap-1">

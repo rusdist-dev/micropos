@@ -15,6 +15,7 @@ class RolePermissionSeeder extends Seeder
         $permissions = [
             'dashboard.view',
             'products.view', 'products.create', 'products.edit', 'products.delete',
+            'categories.view', 'categories.create', 'categories.edit', 'categories.delete',
             'price-types.view', 'price-types.create', 'price-types.edit', 'price-types.delete',
             'suppliers.view', 'suppliers.create', 'suppliers.edit', 'suppliers.delete',
             'stock-opnames.view', 'stock-opnames.create', 'stock-opnames.edit', 'stock-opnames.finalize',
@@ -25,6 +26,7 @@ class RolePermissionSeeder extends Seeder
             'transactions.create', 'transactions.view', 'transactions.view-all',
             'users.view', 'users.create', 'users.edit', 'users.delete',
             'roles.view', 'roles.create', 'roles.edit', 'roles.delete',
+            'settings.view', 'settings.edit',
         ];
 
         foreach ($permissions as $permission) {

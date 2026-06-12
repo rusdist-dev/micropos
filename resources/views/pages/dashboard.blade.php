@@ -3,7 +3,7 @@
         x-data="{
             loading: true,
             error: null,
-            stats: { total_products: 0, total_customers: 0, today_sales: 0, low_stock_count: 0 },
+            stats: { total_products: 0, total_asset_value: 0, today_sales: 0, low_stock_count: 0 },
             salesChart: null,
             topChart: null,
             async load() {
@@ -26,8 +26,8 @@
                 if (! window.Chart || ! this.$refs.salesCanvas) return;
                 const ctx = this.$refs.salesCanvas.getContext('2d');
                 const grad = ctx.createLinearGradient(0, 0, 0, 300);
-                grad.addColorStop(0, 'rgba(20,184,166,0.25)');
-                grad.addColorStop(1, 'rgba(20,184,166,0)');
+                grad.addColorStop(0, window.posColors.primaryRgba(0.25));
+                grad.addColorStop(1, window.posColors.primaryRgba(0));
                 this.salesChart?.destroy();
                 this.salesChart = new window.Chart(ctx, {
                     type: 'line',
@@ -77,10 +77,10 @@
             <div class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
                 <div class="flex items-start justify-between">
                     <div>
-                        <p class="text-sm font-medium text-gray-500">Total Pelanggan</p>
-                        <p class="mt-2 text-2xl font-bold text-gray-900" x-text="loading ? '…' : stats.total_customers"></p>
+                        <p class="text-sm font-medium text-gray-500">Total Nilai Aset</p>
+                        <p class="mt-2 text-2xl font-bold text-gray-900" x-text="loading ? '…' : window.rupiah(stats.total_asset_value)"></p>
                     </div>
-                    <span class="flex h-11 w-11 items-center justify-center rounded-lg bg-gray-100 text-gray-600"><x-heroicon-o-users class="h-6 w-6" /></span>
+                    <span class="flex h-11 w-11 items-center justify-center rounded-lg bg-gray-100 text-gray-600"><x-heroicon-o-banknotes class="h-6 w-6" /></span>
                 </div>
             </div>
             <div class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">

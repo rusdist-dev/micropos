@@ -16,6 +16,8 @@ class TransactionResource extends JsonResource
             'kasir_name' => $this->whenLoaded('kasir', fn () => $this->kasir?->name),
             'customer_id' => $this->customer_id,
             'customer_name' => $this->whenLoaded('customer', fn () => $this->customer?->name ?? 'Pelanggan Umum'),
+            'subtotal' => (float) $this->subtotal,
+            'discount' => (float) $this->discount,
             'total' => (float) $this->total,
             'payment_amount' => (float) $this->payment_amount,
             'change_amount' => (float) $this->change_amount,

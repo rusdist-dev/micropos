@@ -29,12 +29,13 @@ class ProductController extends Controller
     public function index(Request $request): JsonResponse
     {
         $products = Product::query()
-            ->with('prices')
+            ->with(['prices' => fn ($q) => $q->with('priceType')->orderBy('id'), 'category'])
             ->when($request->filled('search'), function ($q) use ($request) {
                 $term = $request->string('search');
                 $q->where(fn ($sub) => $sub->where('name', 'like', "%{$term}%")
                     ->orWhere('sku', 'like', "%{$term}%"));
             })
+            ->when($request->filled('category_id'), fn ($q) => $q->where('category_id', $request->integer('category_id')))
             ->when($request->filled('brand'), fn ($q) => $q->where('brand', $request->string('brand')))
             ->when($request->filled('is_active'), fn ($q) => $q->where('is_active', $request->boolean('is_active')))
             ->orderBy('name')
@@ -52,7 +53,7 @@ class ProductController extends Controller
 
     public function show(Product $product): JsonResponse
     {
-        return $this->respondResource(new ProductResource($product->load('prices')));
+        return $this->respondResource(new ProductResource($product->load(['prices', 'category'])));
     }
 
     public function update(UpdateProductRequest $request, Product $product): JsonResponse

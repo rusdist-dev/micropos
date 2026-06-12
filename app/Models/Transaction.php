@@ -15,6 +15,8 @@ class Transaction extends Model
         'invoice_number',
         'kasir_id',
         'customer_id',
+        'subtotal',
+        'discount',
         'total',
         'payment_amount',
         'change_amount',
@@ -22,6 +24,8 @@ class Transaction extends Model
     ];
 
     protected $casts = [
+        'subtotal' => 'decimal:2',
+        'discount' => 'decimal:2',
         'total' => 'decimal:2',
         'payment_amount' => 'decimal:2',
         'change_amount' => 'decimal:2',

@@ -17,8 +17,8 @@
             if (! window.Chart) return;
             const ctx = this.$refs.canvas.getContext('2d');
             const gradient = ctx.createLinearGradient(0, 0, 0, {{ $height }});
-            gradient.addColorStop(0, 'rgba(20, 184, 166, 0.25)');
-            gradient.addColorStop(1, 'rgba(20, 184, 166, 0)');
+            gradient.addColorStop(0, window.posColors.primaryRgba(0.25));
+            gradient.addColorStop(1, window.posColors.primaryRgba(0));
 
             this.chart = new window.Chart(ctx, {
                 type: 'line',

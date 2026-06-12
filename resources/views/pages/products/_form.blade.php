@@ -11,14 +11,15 @@
         saving: false,
         errors: {},
         priceTypes: [],
+        categories: [],
         prices: {},
         defaultType: '',
         imageFile: null,
         imagePreview: null,
-        form: { name: '', sku: '', brand: '', stock: 0, min_stock: 0, purchase_price: 0, description: '', is_active: true },
+        form: { name: '', sku: '', category_id: '', brand: '', stock: 0, min_stock: 0, purchase_price: 0, description: '', is_active: true },
 
         async init() {
-            await this.loadPriceTypes();
+            await Promise.all([this.loadPriceTypes(), this.loadCategories()]);
             if (this.productId) await this.loadProduct();
         },
         async loadPriceTypes() {
@@ -31,13 +32,19 @@
                 if (! this.defaultType && this.priceTypes.length) this.defaultType = this.priceTypes[0].code;
             } catch (e) { this.$store.toasts.error('Gagal memuat tipe harga: ' + e.message); }
         },
+        async loadCategories() {
+            try {
+                const res = await window.api.get('/api/categories?all=1');
+                this.categories = res.data;
+            } catch (e) { this.$store.toasts.error('Gagal memuat kategori: ' + e.message); }
+        },
         async loadProduct() {
             this.loading = true;
             try {
                 const res = await window.api.get('/api/products/' + this.productId);
                 const p = res.data;
                 this.form = {
-                    name: p.name, sku: p.sku ?? '', brand: p.brand ?? '',
+                    name: p.name, sku: p.sku ?? '', category_id: p.category_id ?? '', brand: p.brand ?? '',
                     stock: p.stock, min_stock: p.min_stock, purchase_price: p.purchase_price,
                     description: p.description ?? '', is_active: p.is_active,
                 };
@@ -78,6 +85,8 @@
             const fd = new FormData();
             fd.append('name', this.form.name ?? '');
             if (this.form.sku) fd.append('sku', this.form.sku);
+            // Selalu kirim category_id (kosong = hapus kategori; '' -> null di server).
+            fd.append('category_id', this.form.category_id ?? '');
             if (this.form.brand) fd.append('brand', this.form.brand);
             fd.append('stock', this.form.stock ?? 0);
             fd.append('min_stock', this.form.min_stock ?? 0);
@@ -133,6 +142,17 @@
                         <input type="text" x-model="form.sku" placeholder="cth. KBL-UTP6"
                             class="block w-full rounded-lg border-gray-300 text-sm shadow-sm focus:border-primary-500 focus:ring-primary-500" :class="err('sku') && 'border-danger-400'" />
                         <p x-show="err('sku')" x-text="err('sku')" class="mt-1 text-xs text-danger-600"></p>
+                    </div>
+                    <div>
+                        <label class="mb-1 block text-sm font-medium text-gray-700">Kategori</label>
+                        <select x-model="form.category_id"
+                            class="block w-full rounded-lg border-gray-300 text-sm shadow-sm focus:border-primary-500 focus:ring-primary-500" :class="err('category_id') && 'border-danger-400'">
+                            <option value="">Tanpa Kategori</option>
+                            <template x-for="c in categories" :key="c.id">
+                                <option :value="c.id" x-text="c.name"></option>
+                            </template>
+                        </select>
+                        <p x-show="err('category_id')" x-text="err('category_id')" class="mt-1 text-xs text-danger-600"></p>
                     </div>
                     <div>
                         <label class="mb-1 block text-sm font-medium text-gray-700">Merek</label>

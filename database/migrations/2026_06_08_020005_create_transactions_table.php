@@ -13,6 +13,10 @@ return new class extends Migration
             $table->string('invoice_number', 50)->unique();
             $table->foreignId('kasir_id')->constrained('users')->restrictOnDelete();
             $table->foreignId('customer_id')->nullable()->constrained('customer_types')->nullOnDelete();
+            // subtotal = jumlah item sebelum diskon; discount = potongan Rp tingkat transaksi;
+            // total = subtotal - discount (nilai yang dibayar pelanggan).
+            $table->decimal('subtotal', 15, 2)->default(0);
+            $table->decimal('discount', 15, 2)->default(0);
             $table->decimal('total', 15, 2)->default(0);
             $table->decimal('payment_amount', 15, 2)->default(0);
             $table->decimal('change_amount', 15, 2)->default(0);

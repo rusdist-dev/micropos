@@ -1,10 +1,20 @@
 {{-- Grid produk kasir. Membaca scope Alpine dari komponen induk (cashier). --}}
 <div class="flex h-full flex-col">
-    {{-- Search + toggle tampilan --}}
+    {{-- Search + filter kategori + toggle tampilan --}}
     <div class="mb-4 flex items-center gap-2">
         <div class="flex-1">
             <x-ui.search-input placeholder="Cari produk (nama / SKU)..." model="productSearch" />
         </div>
+
+        {{-- Filter kategori --}}
+        <select x-model="selectedCategory"
+            class="flex-shrink-0 rounded-lg border-gray-300 text-sm shadow-sm focus:border-primary-500 focus:ring-primary-500"
+            title="Filter kategori">
+            <option value="">Semua Kategori</option>
+            <template x-for="c in categories" :key="c.id">
+                <option :value="c.id" x-text="c.name"></option>
+            </template>
+        </select>
 
         {{-- Switch mode card / list --}}
         <div class="inline-flex flex-shrink-0 rounded-lg border border-gray-200 p-0.5">
@@ -29,7 +39,7 @@
 
         {{-- Mode kartu --}}
         <div x-show="viewMode === 'card'" class="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-4">
-            <template x-for="p in filteredProducts" :key="p.id">
+            <template x-for="p in pagedProducts" :key="p.id">
                 <button
                     type="button"
                     @click="addProduct(p)"
@@ -50,7 +60,7 @@
 
         {{-- Mode daftar --}}
         <div x-show="viewMode === 'list'" class="space-y-2">
-            <template x-for="p in filteredProducts" :key="p.id">
+            <template x-for="p in pagedProducts" :key="p.id">
                 <button
                     type="button"
                     @click="addProduct(p)"
@@ -71,5 +81,15 @@
                 </button>
             </template>
         </div>
+    </div>
+
+    {{-- Pagination katalog (client-side) --}}
+    <div x-show="filteredProducts.length > 0" class="mt-3 border-t border-gray-100 pt-3">
+        <x-ui.pagination
+            page="catalogPage"
+            lastPage="catalogLastPage"
+            total="filteredProducts.length"
+            handler="goToCatalogPage"
+        />
     </div>
 </div>

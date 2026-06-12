@@ -97,9 +97,19 @@
             Tambah Jasa
         </button>
 
-        <div class="mb-3 flex items-center justify-between text-lg">
-            <span class="font-medium text-gray-600">Total</span>
-            <span class="font-bold text-gray-900" x-text="rupiah(total)"></span>
+        <div class="mb-3 space-y-1">
+            <div class="flex items-center justify-between text-sm text-gray-500">
+                <span>Subtotal</span>
+                <span x-text="rupiah(total)"></span>
+            </div>
+            <div x-show="discountAmount > 0" x-cloak class="flex items-center justify-between text-sm text-danger-600">
+                <span>Diskon</span>
+                <span x-text="'− ' + rupiah(discountAmount)"></span>
+            </div>
+            <div class="flex items-center justify-between border-t border-gray-100 pt-1 text-lg">
+                <span class="font-medium text-gray-600">Total</span>
+                <span class="font-bold text-gray-900" x-text="rupiah(grandTotal)"></span>
+            </div>
         </div>
 
         <x-ui.button type="button" variant="outline" class="mb-2 w-full" icon="bookmark"

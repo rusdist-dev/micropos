@@ -31,19 +31,26 @@ class TransactionHistorySheet implements FromArray, WithHeadings, WithTitle, Wit
 
     public function headings(): array
     {
-        return ['No', 'Invoice', 'Tanggal', 'Pelanggan', 'Kasir', 'Jumlah Item', 'Total', 'Profit'];
+        return ['No', 'Invoice', 'Tanggal', 'Pelanggan', 'Kasir', 'Jumlah Item', 'Subtotal', 'Diskon', 'Total', 'Profit'];
     }
 
     public function array(): array
     {
         $rows = [];
         $no = 1;
+        $sumSubtotal = 0;
+        $sumDiscount = 0;
         $sumTotal = 0;
         $sumProfit = 0;
 
         foreach ($this->transactions as $trx) {
-            $profit = $trx->items->sum(fn ($item) => $this->itemProfit($item));
+            $discount = (float) $trx->discount;
+            // Profit bersih: profit per item dikurangi diskon tingkat transaksi.
+            $profit = $trx->items->sum(fn ($item) => $this->itemProfit($item)) - $discount;
+            $subtotal = (float) $trx->subtotal;
             $total = (float) $trx->total;
+            $sumSubtotal += $subtotal;
+            $sumDiscount += $discount;
             $sumTotal += $total;
             $sumProfit += $profit;
 
@@ -54,13 +61,15 @@ class TransactionHistorySheet implements FromArray, WithHeadings, WithTitle, Wit
                 $trx->customer?->name ?? 'Pelanggan Umum',
                 $trx->kasir?->name ?? '-',
                 $trx->items->count(),
+                $subtotal,
+                $discount,
                 $total,
                 $profit,
             ];
         }
 
-        // Baris total di bawah kolom Total & Profit.
-        $rows[] = ['', '', '', '', '', 'TOTAL', $sumTotal, $sumProfit];
+        // Baris total di bawah kolom Subtotal..Profit.
+        $rows[] = ['', '', '', '', '', 'TOTAL', $sumSubtotal, $sumDiscount, $sumTotal, $sumProfit];
 
         return $rows;
     }
@@ -70,16 +79,18 @@ class TransactionHistorySheet implements FromArray, WithHeadings, WithTitle, Wit
         return [
             'G' => NumberFormat::FORMAT_NUMBER_COMMA_SEPARATED1,
             'H' => NumberFormat::FORMAT_NUMBER_COMMA_SEPARATED1,
+            'I' => NumberFormat::FORMAT_NUMBER_COMMA_SEPARATED1,
+            'J' => NumberFormat::FORMAT_NUMBER_COMMA_SEPARATED1,
         ];
     }
 
     public function styles(Worksheet $sheet): array
     {
-        $sheet->getStyle('A1:H1')->getFont()->setBold(true);
+        $sheet->getStyle('A1:J1')->getFont()->setBold(true);
 
         // Baris total: heading (1) + jumlah transaksi + baris total (1).
         $totalRow = $this->transactions->count() + 2;
-        $sheet->getStyle("F{$totalRow}:H{$totalRow}")->getFont()->setBold(true);
+        $sheet->getStyle("F{$totalRow}:J{$totalRow}")->getFont()->setBold(true);
 
         return [];
     }

@@ -15,6 +15,7 @@ class StoreTransactionRequest extends FormRequest
     {
         return [
             'customer_id' => ['nullable', 'integer', 'exists:customer_types,id'],
+            'discount' => ['nullable', 'numeric', 'min:0'],
             'payment_amount' => ['required', 'numeric', 'min:0'],
             'note' => ['nullable', 'string'],
 

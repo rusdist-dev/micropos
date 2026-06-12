@@ -3,7 +3,6 @@
 namespace App\Services;
 
 use App\Enums\ItemType;
-use App\Models\CustomerType;
 use App\Models\Product;
 use App\Models\Transaction;
 use App\Models\TransactionItem;
@@ -19,7 +18,8 @@ class DashboardService
 
         return [
             'total_products' => Product::count(),
-            'total_customers' => CustomerType::count(),
+            // Nilai aset = total (stok x harga modal) seluruh produk.
+            'total_asset_value' => (float) Product::sum(DB::raw('stock * purchase_price')),
             'today_sales' => (float) Transaction::whereDate('created_at', $today)->sum('total'),
             'low_stock_count' => Product::whereColumn('stock', '<=', 'min_stock')->count(),
         ];

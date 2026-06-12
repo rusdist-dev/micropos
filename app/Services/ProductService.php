@@ -18,6 +18,7 @@ class ProductService
             $product = Product::create([
                 'name' => $data['name'],
                 'sku' => $data['sku'] ?? null,
+                'category_id' => $data['category_id'] ?? null,
                 'brand' => $data['brand'] ?? null,
                 'stock' => $data['stock'] ?? 0,
                 'min_stock' => $data['min_stock'] ?? 0,
@@ -46,8 +47,8 @@ class ProductService
                 'description' => $data['description'] ?? null,
             ], fn ($v) => $v !== null));
 
-            // Field yang boleh bernilai 0/false ditangani eksplisit.
-            foreach (['stock', 'min_stock', 'purchase_price'] as $field) {
+            // Field yang boleh bernilai 0/false/null ditangani eksplisit.
+            foreach (['stock', 'min_stock', 'purchase_price', 'category_id'] as $field) {
                 if (array_key_exists($field, $data)) {
                     $product->{$field} = $data[$field];
                 }

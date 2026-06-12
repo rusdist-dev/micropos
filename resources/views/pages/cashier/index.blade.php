@@ -7,9 +7,13 @@
             services: [],
             customers: [],
             priceTypes: [],
+            categories: [],
             quickAmounts: [50000, 100000, 200000],
 
             productSearch: '',
+            selectedCategory: '',
+            catalogPage: 1,
+            catalogPerPage: 8,
             viewMode: 'card',
             cart: [],
             selectedCustomer: '',
@@ -27,6 +31,9 @@
             paymentAmount: '',
             processing: false,
 
+            discountType: 'amount',  // 'amount' (Rp) | 'percent' (%)
+            discountInput: '',       // input bebas oleh kasir
+
             showSuccess: false,
             lastChange: 0,
             lastTransaction: null,
@@ -38,26 +45,32 @@
                 this.viewMode = localStorage.getItem('cashier-view') || 'card';
                 this.loadDrafts();
                 this.loadData();
-                this.$watch('priceType', () => this.reconcileCart());
+                this.$watch('priceType', () => { this.reconcileCart(); this.catalogPage = 1; });
+                // Reset ke halaman 1 setiap kali filter katalog berubah.
+                this.$watch('productSearch', () => this.catalogPage = 1);
+                this.$watch('selectedCategory', () => this.catalogPage = 1);
             },
 
             async loadData() {
                 this.loadingData = true;
                 this.loadError = null;
                 try {
-                    const [prod, pt, cust, svc] = await Promise.all([
+                    const [prod, pt, cust, svc, cat] = await Promise.all([
                         window.api.get('/api/products?is_active=1&per_page=500'),
                         window.api.get('/api/price-types?all=1&is_active=1'),
                         window.api.get('/api/customers?per_page=500'),
                         window.api.get('/api/services?is_active=1&per_page=500'),
+                        window.api.get('/api/categories?all=1'),
                     ]);
                     this.products = prod.data.map((p) => ({
                         id: p.id, name: p.name, sku: p.sku, stock: p.stock, min_stock: p.min_stock,
+                        category_id: p.category_id,
                         prices: Object.fromEntries((p.prices || []).map((r) => [r.price_type, r.price])),
                     }));
                     this.priceTypes = pt.data.map((t) => ({ code: t.code, name: t.name }));
                     this.customers = cust.data.map((c) => ({ id: c.id, name: c.name }));
                     this.services = svc.data.map((s) => ({ id: s.id, name: s.name, default_price: s.default_price }));
+                    this.categories = cat.data.map((c) => ({ id: c.id, name: c.name }));
                     if (! this.priceType && this.priceTypes.length) this.priceType = this.priceTypes[0].code;
                 } catch (e) {
                     this.loadError = e.message;
@@ -79,14 +92,35 @@
 
             get filteredProducts() {
                 const q = this.productSearch.toLowerCase();
+                const cat = this.selectedCategory;
                 return this.products.filter((p) =>
                     this.hasPrice(p, this.priceType)
+                    && (! cat || p.category_id == cat)
                     && (! q || p.name.toLowerCase().includes(q) || (p.sku && p.sku.toLowerCase().includes(q)))
                 );
             },
-            get total() { return this.cart.reduce((s, i) => s + this.itemPrice(i) * i.qty, 0); },
-            get change() { return this.paymentAmount === '' ? 0 : Number(this.paymentAmount) - this.total; },
+            // Pagination katalog (client-side) atas hasil filter.
+            get catalogLastPage() { return Math.max(1, Math.ceil(this.filteredProducts.length / this.catalogPerPage)); },
+            get pagedProducts() {
+                const page = Math.min(this.catalogPage, this.catalogLastPage);
+                const start = (page - 1) * this.catalogPerPage;
+                return this.filteredProducts.slice(start, start + this.catalogPerPage);
+            },
+            goToCatalogPage(p) { this.catalogPage = Math.min(Math.max(1, p), this.catalogLastPage); },
+            get total() { return this.cart.reduce((s, i) => s + this.itemPrice(i) * i.qty, 0); }, // subtotal (sebelum diskon)
+            // Diskon dihitung dari input bebas; di-clamp agar 0 <= diskon <= subtotal.
+            get discountAmount() {
+                const raw = Number(this.discountInput);
+                if (! this.discountInput || isNaN(raw) || raw <= 0) return 0;
+                const amount = this.discountType === 'percent'
+                    ? Math.round(this.total * Math.min(raw, 100) / 100)
+                    : raw;
+                return Math.min(Math.max(amount, 0), this.total);
+            },
+            get grandTotal() { return this.total - this.discountAmount; },
+            get change() { return this.paymentAmount === '' ? 0 : Number(this.paymentAmount) - this.grandTotal; },
             itemPrice(item) { return item.type === 'service' ? item.price : (item.prices[this.priceType] ?? 0); },
+            resetDiscount() { this.discountType = 'amount'; this.discountInput = ''; },
 
             addProduct(p) {
                 if (p.stock <= 0) return;
@@ -116,7 +150,7 @@
                 item.qty = q;
             },
             removeItem(idx) { this.cart.splice(idx, 1); },
-            clearCart() { this.cart = []; this.selectedCustomer = ''; },
+            clearCart() { this.cart = []; this.selectedCustomer = ''; this.resetDiscount(); },
             reconcileCart() {
                 const removed = this.cart.filter((i) => i.type === 'product' && ! this.hasPrice(i, this.priceType));
                 if (removed.length === 0) return;
@@ -163,6 +197,7 @@
                 try {
                     const res = await window.api.post('/api/transactions', {
                         customer_id: this.selectedCustomer || null,
+                        discount: this.discountAmount,
                         payment_amount: Number(this.paymentAmount),
                         items,
                     });
@@ -173,6 +208,7 @@
                     this.cart = [];
                     this.selectedCustomer = '';
                     this.paymentAmount = '';
+                    this.resetDiscount();
                     this.loadData(); // refresh stok produk
                 } catch (e) {
                     this.notify(e.message, 'danger');
@@ -189,17 +225,20 @@
                 this.drafts.unshift({
                     id: Date.now(), label: this.customerName(this.selectedCustomer),
                     cart: JSON.parse(JSON.stringify(this.cart)), selectedCustomer: this.selectedCustomer, priceType: this.priceType,
+                    discountType: this.discountType, discountInput: this.discountInput,
                     itemCount: this.cart.length, total: this.total,
                     savedAt: new Date().toLocaleString('id-ID', { dateStyle: 'short', timeStyle: 'short' }),
                 });
                 this.persistDrafts();
-                this.cart = []; this.selectedCustomer = ''; this.notify('Transaksi disimpan sebagai draft.', 'success');
+                this.cart = []; this.selectedCustomer = ''; this.resetDiscount(); this.notify('Transaksi disimpan sebagai draft.', 'success');
             },
             openDraft(draft) {
                 if (this.cart.length > 0) this.saveDraft();
                 this.cart = JSON.parse(JSON.stringify(draft.cart));
                 this.selectedCustomer = draft.selectedCustomer;
                 this.priceType = draft.priceType;
+                this.discountType = draft.discountType || 'amount';
+                this.discountInput = draft.discountInput || '';
                 this.deleteDraft(draft.id);
                 this.showDrafts = false;
             },

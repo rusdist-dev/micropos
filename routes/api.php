@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\CustomerController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\PriceTypeController;
@@ -7,6 +8,7 @@ use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\ReturnController;
 use App\Http\Controllers\Api\RoleController;
 use App\Http\Controllers\Api\ServiceController;
+use App\Http\Controllers\Api\SettingController;
 use App\Http\Controllers\Api\StockOpnameController;
 use App\Http\Controllers\Api\SupplierController;
 use App\Http\Controllers\Api\SupplyController;
@@ -34,6 +36,14 @@ Route::middleware(['web', 'auth'])->group(function () {
         Route::get('/dashboard/sales-chart', [DashboardController::class, 'salesChart']);
         Route::get('/dashboard/top-products', [DashboardController::class, 'topProducts']);
     });
+
+    // Kategori (master). List/show dipakai filter kasir & form produk (gated products.view
+    // agar kasir bisa membaca); mutasi gated categories.* untuk manajemen.
+    Route::get('/categories', [CategoryController::class, 'index'])->middleware('permission:products.view');
+    Route::post('/categories', [CategoryController::class, 'store'])->middleware('permission:categories.create');
+    Route::get('/categories/{category}', [CategoryController::class, 'show'])->middleware('permission:categories.view');
+    Route::match(['put', 'patch'], '/categories/{category}', [CategoryController::class, 'update'])->middleware('permission:categories.edit');
+    Route::delete('/categories/{category}', [CategoryController::class, 'destroy'])->middleware('permission:categories.delete');
 
     // Produk
     Route::get('/products', [ProductController::class, 'index'])->middleware('permission:products.view');
@@ -101,6 +111,11 @@ Route::middleware(['web', 'auth'])->group(function () {
     Route::get('/transactions/export', [TransactionController::class, 'export'])->middleware('permission:transactions.view');
     Route::get('/transactions/kasirs', [TransactionController::class, 'kasirs'])->middleware('permission:transactions.view-all');
     Route::get('/transactions/{transaction}', [TransactionController::class, 'show'])->middleware('permission:transactions.view');
+
+    // Konfigurasi Toko
+    Route::get('/settings', [SettingController::class, 'index'])->middleware('permission:settings.view');
+    Route::post('/settings', [SettingController::class, 'update'])->middleware('permission:settings.edit');
+    Route::delete('/settings/logo', [SettingController::class, 'destroyLogo'])->middleware('permission:settings.edit');
 
     // Role & Hak Akses
     Route::get('/permissions', [RoleController::class, 'permissions'])->middleware('permission:roles.view');

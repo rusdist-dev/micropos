@@ -1,7 +1,7 @@
 <x-layouts.guest title="Masuk">
     <div class="mb-6 text-center">
         <h1 class="text-xl font-bold text-gray-900">Selamat Datang</h1>
-        <p class="mt-1 text-sm text-gray-500">Masuk untuk melanjutkan ke MicroPOS</p>
+        <p class="mt-1 text-sm text-gray-500">Masuk untuk melanjutkan ke {{ $appSettings->storeName() }}</p>
     </div>
 
     {{-- Status sesi --}}

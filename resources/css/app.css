@@ -2,6 +2,25 @@
 @tailwind components;
 @tailwind utilities;
 
+/*
+ * Channel warna primary default (teal-500 ramp). Dipakai kelas `primary-*` via
+ * rgb(var(--color-primary-XXX) / <alpha>) di tailwind.config.js. Nilai ini bisa
+ * di-override per-request di partials/theme.blade.php (halaman Konfigurasi).
+ */
+:root {
+    --color-primary-50: 240 253 250;
+    --color-primary-100: 204 251 241;
+    --color-primary-200: 153 246 228;
+    --color-primary-300: 94 234 212;
+    --color-primary-400: 45 212 191;
+    --color-primary-500: 20 184 166;
+    --color-primary-600: 13 148 136;
+    --color-primary-700: 15 118 110;
+    --color-primary-800: 17 94 89;
+    --color-primary-900: 19 78 74;
+    --color-primary-950: 4 47 46;
+}
+
 /* Sembunyikan elemen Alpine sampai komponen ter-inisialisasi. */
 [x-cloak] {
     display: none !important;
