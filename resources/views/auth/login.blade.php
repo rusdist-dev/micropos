@@ -41,10 +41,4 @@
 
         <x-ui.button type="submit" size="lg" class="w-full">Masuk</x-ui.button>
     </form>
-
-    <div class="mt-6 rounded-lg bg-gray-50 px-4 py-3 text-center text-xs text-gray-500">
-        <p class="font-medium text-gray-600">Akun demo (prototype)</p>
-        <p class="mt-1">admin@pos.test &middot; kasir@pos.test</p>
-        <p>password: <span class="font-mono">password</span></p>
-    </div>
 </x-layouts.guest>
