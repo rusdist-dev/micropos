@@ -13,6 +13,13 @@
         async init() {
             await this.loadRoles();
             if (this.userId) await this.loadData();
+            // Sinkronkan nilai <select> ke state setelah opsi (x-for) ter-render async,
+            // mencegah desync di mana select menampilkan opsi pertama tapi form.role tetap default.
+            this.$nextTick(() => {
+                if (this.$refs.roleSelect && this.roles.includes(this.form.role)) {
+                    this.$refs.roleSelect.value = this.form.role;
+                }
+            });
         },
         async loadRoles() {
             try {
@@ -81,7 +88,7 @@
                 </div>
                 <div>
                     <label class="mb-1 block text-sm font-medium text-gray-700">Role <span class="text-danger-500">*</span></label>
-                    <select x-model="form.role" class="block w-full rounded-lg border-gray-300 text-sm shadow-sm focus:border-primary-500 focus:ring-primary-500">
+                    <select x-ref="roleSelect" x-model="form.role" class="block w-full rounded-lg border-gray-300 text-sm shadow-sm focus:border-primary-500 focus:ring-primary-500">
                         <template x-for="r in roles" :key="r"><option :value="r" x-text="r.charAt(0).toUpperCase() + r.slice(1)"></option></template>
                     </select>
                     <p x-show="err('role')" x-text="err('role')" class="mt-1 text-xs text-danger-600"></p>
