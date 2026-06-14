@@ -11,6 +11,7 @@
             ['label' => 'Pelanggan',  'icon' => 'users',               'route' => 'customers.index',    'active' => 'customers.*',    'permission' => 'customers.view'],
             ['label' => 'Pemasok',    'icon' => 'truck',               'route' => 'suppliers.index',    'active' => 'suppliers.*',    'permission' => 'suppliers.view'],
             ['label' => 'Jasa',       'icon' => 'wrench-screwdriver',  'route' => 'services.index',     'active' => 'services.*',     'permission' => 'services.view'],
+            ['label' => 'Teknisi',    'icon' => 'identification',      'route' => 'technicians.index',  'active' => 'technicians.*',  'permission' => 'technicians.view'],
         ],
         'INVENTORI' => [
             ['label' => 'Stok Opname',   'icon' => 'clipboard-document-check', 'route' => 'stock-opnames.index', 'active' => 'stock-opnames.*', 'permission' => 'stock-opnames.view'],
@@ -18,6 +19,7 @@
         ],
         'TRANSAKSI' => [
             ['label' => 'Kasir',     'icon' => 'shopping-cart',       'route' => 'cashier.index',      'active' => 'cashier.*',     'permission' => 'transactions.create'],
+            ['label' => 'Order Servis', 'icon' => 'wrench',           'route' => 'service-orders.index', 'active' => 'service-orders.*', 'permission' => 'service-orders.view'],
             ['label' => 'Riwayat',   'icon' => 'clock',               'route' => 'transactions.index', 'active' => 'transactions.*','permission' => 'transactions.view'],
             ['label' => 'Retur',     'icon' => 'arrow-uturn-left',    'route' => 'returns.index',      'active' => 'returns.*',     'permission' => 'returns.view'],
         ],

@@ -112,10 +112,16 @@
             </div>
         </div>
 
-        <x-ui.button type="button" variant="outline" class="mb-2 w-full" icon="bookmark"
-            ::disabled="cart.length === 0" @click="saveDraft()">
-            Simpan sebagai Draft
-        </x-ui.button>
+        <div class="mb-2 flex gap-2">
+            <x-ui.button type="button" variant="outline" class="flex-1" icon="bookmark"
+                ::disabled="cart.length === 0" @click="saveDraft()">
+                Simpan Draft
+            </x-ui.button>
+            <x-ui.button type="button" variant="outline" class="flex-1" icon="inbox-stack" @click="showDrafts = true">
+                Draft Tersimpan
+                <span x-show="drafts.length" x-cloak class="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-primary-600 px-1.5 text-xs font-semibold text-white" x-text="drafts.length"></span>
+            </x-ui.button>
+        </div>
 
         <x-ui.button type="button" class="w-full" size="lg" icon="banknotes"
             ::disabled="cart.length === 0" @click="openPaymentModal()">

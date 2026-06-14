@@ -23,7 +23,9 @@ class RolePermissionSeeder extends Seeder
             'returns.view', 'returns.create', 'returns.view-all',
             'customers.view', 'customers.create', 'customers.edit', 'customers.delete',
             'services.view', 'services.create', 'services.edit', 'services.delete',
+            'technicians.view', 'technicians.create', 'technicians.edit', 'technicians.delete',
             'transactions.create', 'transactions.view', 'transactions.view-all',
+            'service-orders.view', 'service-orders.create', 'service-orders.edit', 'service-orders.complete', 'service-orders.cancel', 'service-orders.view-all',
             'users.view', 'users.create', 'users.edit', 'users.delete',
             'roles.view', 'roles.create', 'roles.edit', 'roles.delete',
             'settings.view', 'settings.edit',
@@ -46,8 +48,10 @@ class RolePermissionSeeder extends Seeder
             'price-types.view',
             'customers.view', 'customers.create',
             'services.view',
+            'technicians.view',
             'transactions.create', 'transactions.view',
             'returns.view', 'returns.create',
+            'service-orders.view', 'service-orders.create', 'service-orders.edit', 'service-orders.complete', 'service-orders.cancel',
         ]);
     }
 }

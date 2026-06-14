@@ -4,11 +4,17 @@
             id: {{ (int) $id }},
             loading: true, error: null, saving: false, finalizing: false,
             opname: null, rows: [], search: '', showFinalize: false,
+            page: 1, perPage: 50,
 
             get isDraft() { return this.opname?.status === 'draft'; },
             get filteredRows() {
                 const q = this.search.toLowerCase();
                 return this.rows.filter(r => !q || r.product_name.toLowerCase().includes(q) || (r.sku && r.sku.toLowerCase().includes(q)));
+            },
+            get pageCount() { return Math.max(1, Math.ceil(this.filteredRows.length / this.perPage)); },
+            get pagedRows() {
+                const start = (this.page - 1) * this.perPage;
+                return this.filteredRows.slice(start, start + this.perPage);
             },
             get countedCount() { return this.rows.filter(r => r.counted_qty !== '' && r.counted_qty !== null).length; },
             diff(r) {
@@ -49,7 +55,7 @@
                 } catch (e) { this.$store.toasts.error(e.message); } finally { this.finalizing = false; }
             },
         }"
-        x-init="load()"
+        x-init="load(); $watch('search', () => page = 1)"
     >
         <div x-show="loading" class="py-10"><x-ui.loading-spinner size="lg" label="Memuat..." /></div>
         <template x-if="error"><x-ui.alert variant="danger" title="Gagal memuat"><span x-text="error"></span></x-ui.alert></template>
@@ -88,7 +94,7 @@
                     <x-ui.th align="center">Selisih</x-ui.th>
                     <x-ui.th>Catatan</x-ui.th>
                 </x-slot:head>
-                <template x-for="r in filteredRows" :key="r.product_id">
+                <template x-for="r in pagedRows" :key="r.product_id">
                     <tr class="hover:bg-gray-50">
                         <td class="px-4 py-1">
                             <p class="text-sm font-medium text-gray-800" x-text="r.product_name"></p>
@@ -122,6 +128,24 @@
                     </tr>
                 </template>
             </x-ui.table>
+
+            {{-- Paginasi sisi klien --}}
+            <div x-show="filteredRows.length > perPage" class="mt-4 flex flex-col items-center justify-between gap-3 sm:flex-row">
+                <p class="text-sm text-gray-500">
+                    Menampilkan
+                    <span class="font-medium text-gray-700" x-text="(page - 1) * perPage + 1"></span>
+                    &ndash;
+                    <span class="font-medium text-gray-700" x-text="Math.min(page * perPage, filteredRows.length)"></span>
+                    dari
+                    <span class="font-medium text-gray-700" x-text="filteredRows.length"></span>
+                    produk
+                </p>
+                <div class="flex items-center gap-2">
+                    <x-ui.button variant="outline" size="sm" type="button" icon="chevron-left" ::disabled="page <= 1" @click="page = Math.max(1, page - 1)">Sebelumnya</x-ui.button>
+                    <span class="text-sm text-gray-600">Hal. <span x-text="page"></span> / <span x-text="pageCount"></span></span>
+                    <x-ui.button variant="outline" size="sm" type="button" icon="chevron-right" ::disabled="page >= pageCount" @click="page = Math.min(pageCount, page + 1)">Berikutnya</x-ui.button>
+                </div>
+            </div>
         </div>
 
         {{-- Konfirmasi finalisasi --}}

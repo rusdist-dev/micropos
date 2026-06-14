@@ -3,7 +3,7 @@
         x-data="{
             loading: true,
             error: null,
-            stats: { total_products: 0, total_asset_value: 0, today_sales: 0, low_stock_count: 0 },
+            stats: { total_products: 0, total_asset_value: 0, today_sales: 0, today_sales_cashier: 0, today_sales_service: 0, low_stock_count: 0 },
             salesChart: null,
             topChart: null,
             async load() {
@@ -32,7 +32,7 @@
                 this.salesChart = new window.Chart(ctx, {
                     type: 'line',
                     data: { labels: payload.labels, datasets: [{
-                        label: 'Penjualan', data: payload.data,
+                        label: 'Pendapatan', data: payload.data,
                         borderColor: window.posColors.primary, backgroundColor: grad,
                         borderWidth: 2, fill: true, tension: 0.4, pointRadius: 3,
                     }] },
@@ -86,8 +86,12 @@
             <div class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
                 <div class="flex items-start justify-between">
                     <div>
-                        <p class="text-sm font-medium text-gray-500">Penjualan Hari Ini</p>
+                        <p class="text-sm font-medium text-gray-500">Pendapatan Hari Ini</p>
                         <p class="mt-2 text-2xl font-bold text-gray-900" x-text="loading ? '…' : window.rupiah(stats.today_sales)"></p>
+                        <p class="mt-1 text-xs text-gray-400" x-show="!loading">
+                            Kasir <span class="font-medium text-gray-600" x-text="window.rupiah(stats.today_sales_cashier)"></span>
+                            &middot; Servis <span class="font-medium text-gray-600" x-text="window.rupiah(stats.today_sales_service)"></span>
+                        </p>
                     </div>
                     <span class="flex h-11 w-11 items-center justify-center rounded-lg bg-warning-50 text-warning-600"><x-heroicon-o-banknotes class="h-6 w-6" /></span>
                 </div>
@@ -105,7 +109,7 @@
 
         {{-- Charts --}}
         <div class="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-3">
-            <x-ui.card title="Penjualan 7 Hari Terakhir" class="lg:col-span-2">
+            <x-ui.card title="Pendapatan 7 Hari Terakhir" class="lg:col-span-2">
                 <div class="relative" style="height: 300px">
                     <div x-show="loading" class="absolute inset-0 flex items-center justify-center">
                         <x-ui.loading-spinner size="lg" />

@@ -10,10 +10,12 @@ use App\Http\Controllers\Web\ProductController;
 use App\Http\Controllers\Web\ReturnController;
 use App\Http\Controllers\Web\RoleController;
 use App\Http\Controllers\Web\ServiceController;
+use App\Http\Controllers\Web\ServiceOrderController;
 use App\Http\Controllers\Web\SettingController;
 use App\Http\Controllers\Web\StockOpnameController;
 use App\Http\Controllers\Web\SupplierController;
 use App\Http\Controllers\Web\SupplyController;
+use App\Http\Controllers\Web\TechnicianController;
 use App\Http\Controllers\Web\TransactionController;
 use App\Http\Controllers\Web\UserController;
 use Illuminate\Support\Facades\Route;
@@ -77,12 +79,20 @@ Route::middleware(['auth'])->group(function () {
     // Jasa
     Route::get('/services', [ServiceController::class, 'index'])->name('services.index');
 
+    // Teknisi (master untuk order servis)
+    Route::get('/technicians', [TechnicianController::class, 'index'])->name('technicians.index');
+
     // Kasir
     Route::get('/cashier', [CashierController::class, 'index'])->name('cashier.index');
 
     // Riwayat Transaksi
     Route::get('/transactions', [TransactionController::class, 'index'])->name('transactions.index');
     Route::get('/transactions/{id}', [TransactionController::class, 'show'])->name('transactions.show');
+
+    // Order Servis
+    Route::get('/service-orders', [ServiceOrderController::class, 'index'])->name('service-orders.index');
+    Route::get('/service-orders/create', [ServiceOrderController::class, 'create'])->name('service-orders.create');
+    Route::get('/service-orders/{id}', [ServiceOrderController::class, 'show'])->name('service-orders.show');
 
     // Konfigurasi Toko
     Route::get('/settings', [SettingController::class, 'index'])

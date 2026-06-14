@@ -14,7 +14,7 @@
 
         <x-ui.input
             type="email" name="email" label="Email" required autofocus
-            placeholder="admin@pos.test"
+            placeholder="admin@yourdomain.co"
             :value="old('email')"
             :error="$errors->first('email')"
         />

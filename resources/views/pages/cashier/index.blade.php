@@ -246,16 +246,6 @@
         }"
         class="flex flex-col gap-4 lg:h-[calc(100vh-8rem)]"
     >
-        {{-- Toolbar atas --}}
-        <div class="flex items-center justify-end">
-            <button type="button" @click="showDrafts = true"
-                class="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50">
-                <x-heroicon-o-inbox-stack class="h-5 w-5 text-gray-400" />
-                Draft Tersimpan
-                <span x-show="drafts.length" x-cloak class="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-primary-600 px-1.5 text-xs font-semibold text-white" x-text="drafts.length"></span>
-            </button>
-        </div>
-
         {{-- Error muat data --}}
         <template x-if="loadError">
             <x-ui.alert variant="danger" title="Gagal memuat data kasir">
@@ -314,8 +304,24 @@
             </div>
             <x-slot:footer>
                 <x-ui.button variant="outline" type="button" @click="showSuccess = false">Tutup</x-ui.button>
-                <x-ui.button variant="outline" type="button" icon="printer" @click="$store.receipt.print(lastTransaction, 'thermal')">Struk 80mm</x-ui.button>
-                <x-ui.button type="button" icon="document-text" @click="$store.receipt.print(lastTransaction, 'a4')">Cetak A4</x-ui.button>
+                <x-ui.dropdown align="right" direction="up" width="48">
+                    <x-slot:trigger>
+                        <x-ui.button type="button" icon="printer">
+                            Cetak
+                            <x-heroicon-o-chevron-down class="h-4 w-4" />
+                        </x-ui.button>
+                    </x-slot:trigger>
+                    <x-slot:content>
+                        <button type="button" @click="$store.receipt.print(lastTransaction, 'thermal')" class="flex w-full items-center gap-2 px-4 py-2 text-left text-sm text-gray-700 transition hover:bg-gray-50">
+                            <x-heroicon-o-printer class="h-4 w-4 text-gray-400" />
+                            Struk 80mm
+                        </button>
+                        <button type="button" @click="$store.receipt.print(lastTransaction, 'a4')" class="flex w-full items-center gap-2 px-4 py-2 text-left text-sm text-gray-700 transition hover:bg-gray-50">
+                            <x-heroicon-o-document-text class="h-4 w-4 text-gray-400" />
+                            Cetak A4
+                        </button>
+                    </x-slot:content>
+                </x-ui.dropdown>
             </x-slot:footer>
         </x-ui.modal>
     </div>

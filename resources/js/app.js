@@ -260,6 +260,153 @@ document.addEventListener('alpine:init', () => {
                 <div class="foot">${e(store.footer)}</div>
                 </body></html>`;
         },
+
+        // ===== Invoice Order Servis (format berbeda: teknisi, tenggang, status, terbayar, sisa) =====
+        day(d) {
+            return d ? new Date(d).toLocaleDateString('id-ID', { dateStyle: 'long' }) : '-';
+        },
+        printService(order, size = 'thermal') {
+            if (!order) return;
+            const html = size === 'a4' ? this.serviceA4Html(order) : this.serviceThermalHtml(order);
+            const features = size === 'a4' ? 'width=820,height=920' : 'width=380,height=640';
+            const w = window.open('', '_blank', features);
+            if (!w) return;
+            w.document.write(html);
+            w.document.close();
+            w.focus();
+            setTimeout(() => w.print(), 250);
+        },
+
+        serviceThermalHtml(o) {
+            const m = (v) => this.money(v);
+            const e = (v) => this.esc(v);
+            const store = this.store();
+            const rows = (o.items || [])
+                .map((i) => `<tr><td>${e(i.item_name)}<br><span class="muted">${i.qty} x ${m(i.price_snapshot)}</span></td><td class="r">${m(i.subtotal)}</td></tr>`)
+                .join('');
+            const logo = store.logoUrl ? `<img src="${e(store.logoUrl)}" class="logo" alt="">` : '';
+            const address = store.address ? `<div class="center muted">${e(store.address)}</div>` : '';
+            const phone = store.phone ? `<div class="center muted">${e(store.phone)}</div>` : '';
+            return `<!doctype html><html><head><meta charset="utf-8"><title>${e(o.invoice_number) || 'Servis'}</title>
+                <style>
+                    @page { size: 80mm auto; margin: 3mm; }
+                    * { font-family: 'Courier New', monospace; font-size: 12px; }
+                    body { width: 72mm; margin: 0 auto; padding: 0; color: #000; }
+                    h1 { font-size: 16px; text-align: center; margin: 0 0 2px; }
+                    .center { text-align: center; }
+                    .muted { color: #555; font-size: 11px; }
+                    .logo { display: block; max-height: 48px; margin: 0 auto 4px; }
+                    table { width: 100%; border-collapse: collapse; }
+                    td { padding: 2px 0; vertical-align: top; }
+                    .r { text-align: right; }
+                    hr { border: none; border-top: 1px dashed #000; margin: 6px 0; }
+                    .row { display: flex; justify-content: space-between; }
+                    .bold { font-weight: bold; }
+                </style></head><body>
+                ${logo}
+                <h1>${e(store.name)}</h1>
+                ${address}
+                ${phone}
+                <div class="center muted">INVOICE SERVIS</div>
+                <hr>
+                <div class="row"><span>No</span><span>${e(o.invoice_number) || '-'}</span></div>
+                <div class="row"><span>Tanggal</span><span>${this.date(o)}</span></div>
+                <div class="row"><span>Pelanggan</span><span>${e(o.customer_name) || 'Umum'}</span></div>
+                <div class="row"><span>Teknisi</span><span>${e(o.technician_name) || '-'}</span></div>
+                <div class="row"><span>Tenggang</span><span>${this.day(o.due_date)}</span></div>
+                <div class="row"><span>Status</span><span>${e(o.service_status_label) || '-'}</span></div>
+                <hr>
+                <table>${rows}</table>
+                <hr>
+                ${Number(o.discount) > 0 ? `<div class="row"><span>Subtotal</span><span>${m(o.subtotal)}</span></div>
+                <div class="row"><span>Diskon</span><span>- ${m(o.discount)}</span></div>` : ''}
+                <div class="row bold"><span>TOTAL</span><span>${m(o.total)}</span></div>
+                <div class="row"><span>Terbayar</span><span>${m(o.paid_amount)}</span></div>
+                <div class="row"><span>Sisa</span><span>${m(o.remaining)}</span></div>
+                <div class="row"><span>Pembayaran</span><span>${e(o.payment_status_label) || '-'}</span></div>
+                <hr>
+                <div class="center muted">${e(store.footer)}</div>
+                </body></html>`;
+        },
+
+        serviceA4Html(o) {
+            const m = (v) => this.money(v);
+            const e = (v) => this.esc(v);
+            const store = this.store();
+            const rows = (o.items || [])
+                .map((i, idx) => `<tr>
+                    <td class="c">${idx + 1}</td>
+                    <td>${e(i.item_name)}<br><span class="muted">${i.item_type === 'service' ? 'Jasa' : 'Bahan'}</span></td>
+                    <td class="r">${m(i.price_snapshot)}</td>
+                    <td class="c">${i.qty}</td>
+                    <td class="r">${m(i.subtotal)}</td>
+                </tr>`)
+                .join('');
+            const brand = store.logoUrl
+                ? `<img src="${e(store.logoUrl)}" style="max-height:56px" alt="">`
+                : `<div class="brand">${e(store.name)}</div>`;
+            const subline = [store.address, store.phone].filter(Boolean).map(e).join('<br>');
+            return `<!doctype html><html><head><meta charset="utf-8"><title>${e(o.invoice_number) || 'Invoice Servis'}</title>
+                <style>
+                    @page { size: A4; margin: 15mm; }
+                    * { font-family: Arial, Helvetica, sans-serif; color: #111; box-sizing: border-box; }
+                    body { margin: 0; font-size: 13px; }
+                    .head { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid ${store.color}; padding-bottom: 12px; }
+                    .brand { font-size: 24px; font-weight: 700; color: ${store.color}; }
+                    .store-name { font-size: 15px; font-weight: 700; margin-top: 4px; }
+                    .muted { color: #666; }
+                    .title { text-align: right; }
+                    .title h2 { margin: 0; font-size: 18px; letter-spacing: 1px; }
+                    .meta { display: flex; justify-content: space-between; margin: 16px 0; }
+                    .meta div { line-height: 1.6; }
+                    table { width: 100%; border-collapse: collapse; margin-top: 8px; }
+                    th { background: #f7f7f7; text-align: left; padding: 4px 8px; font-size: 12px; border-bottom: 2px solid ${store.color}; }
+                    td { padding: 2px 8px; border-bottom: 1px solid #eee; vertical-align: top; line-height: 1.25; }
+                    th.r, td.r { text-align: right; } th.c, td.c { text-align: center; }
+                    .muted { font-size: 11px; }
+                    .totals { width: 280px; margin-left: auto; margin-top: 12px; }
+                    .totals .row { display: flex; justify-content: space-between; padding: 4px 8px; }
+                    .totals .grand { border-top: 2px solid ${store.color}; font-weight: 700; font-size: 15px; }
+                    .foot { margin-top: 40px; text-align: center; color: #666; font-size: 12px; }
+                </style></head><body>
+                <div class="head">
+                    <div>
+                        ${brand}
+                        ${store.logoUrl ? `<div class="store-name">${e(store.name)}</div>` : ''}
+                        ${subline ? `<div class="muted">${subline}</div>` : ''}
+                    </div>
+                    <div class="title">
+                        <h2>INVOICE SERVIS</h2>
+                        <div class="muted">${e(o.invoice_number) || '-'}</div>
+                    </div>
+                </div>
+                <div class="meta">
+                    <div>
+                        <b>Pelanggan</b><br>${e(o.customer_name) || 'Pelanggan Umum'}<br>
+                        <b>Teknisi:</b> ${e(o.technician_name) || '-'}
+                    </div>
+                    <div style="text-align:right">
+                        <b>Tanggal:</b> ${this.date(o)}<br>
+                        <b>Tenggang:</b> ${this.day(o.due_date)}<br>
+                        <b>Operator:</b> ${e(o.operator_name) || '-'}<br>
+                        <b>Status:</b> ${e(o.service_status_label) || '-'}
+                    </div>
+                </div>
+                <table>
+                    <thead><tr><th class="c">#</th><th>Item</th><th class="r">Harga</th><th class="c">Qty</th><th class="r">Subtotal</th></tr></thead>
+                    <tbody>${rows}</tbody>
+                </table>
+                <div class="totals">
+                    ${Number(o.discount) > 0 ? `<div class="row"><span>Subtotal</span><span>${m(o.subtotal)}</span></div>
+                    <div class="row"><span>Diskon</span><span>− ${m(o.discount)}</span></div>` : ''}
+                    <div class="row"><span>Total</span><span>${m(o.total)}</span></div>
+                    <div class="row"><span>Terbayar</span><span>${m(o.paid_amount)}</span></div>
+                    <div class="row grand"><span>Sisa Tagihan</span><span>${m(o.remaining)}</span></div>
+                    <div class="row"><span>Pembayaran</span><span>${e(o.payment_status_label) || '-'}</span></div>
+                </div>
+                <div class="foot">${e(store.footer)}</div>
+                </body></html>`;
+        },
     });
 
     Alpine.store('toasts', {

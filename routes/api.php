@@ -8,10 +8,12 @@ use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\ReturnController;
 use App\Http\Controllers\Api\RoleController;
 use App\Http\Controllers\Api\ServiceController;
+use App\Http\Controllers\Api\ServiceOrderController;
 use App\Http\Controllers\Api\SettingController;
 use App\Http\Controllers\Api\StockOpnameController;
 use App\Http\Controllers\Api\SupplierController;
 use App\Http\Controllers\Api\SupplyController;
+use App\Http\Controllers\Api\TechnicianController;
 use App\Http\Controllers\Api\TransactionController;
 use App\Http\Controllers\Api\UserController;
 use App\Models\ReturnTransaction;
@@ -111,6 +113,22 @@ Route::middleware(['web', 'auth'])->group(function () {
     Route::get('/transactions/export', [TransactionController::class, 'export'])->middleware('permission:transactions.view');
     Route::get('/transactions/kasirs', [TransactionController::class, 'kasirs'])->middleware('permission:transactions.view-all');
     Route::get('/transactions/{transaction}', [TransactionController::class, 'show'])->middleware('permission:transactions.view');
+
+    // Teknisi (master untuk order servis)
+    Route::get('/technicians', [TechnicianController::class, 'index'])->middleware('permission:technicians.view');
+    Route::post('/technicians', [TechnicianController::class, 'store'])->middleware('permission:technicians.create');
+    Route::get('/technicians/{technician}', [TechnicianController::class, 'show'])->middleware('permission:technicians.view');
+    Route::match(['put', 'patch'], '/technicians/{technician}', [TechnicianController::class, 'update'])->middleware('permission:technicians.edit');
+    Route::delete('/technicians/{technician}', [TechnicianController::class, 'destroy'])->middleware('permission:technicians.delete');
+
+    // Order Servis (workflow Process -> Selesai/Batal)
+    Route::get('/service-orders', [ServiceOrderController::class, 'index'])->middleware('permission:service-orders.view');
+    Route::post('/service-orders', [ServiceOrderController::class, 'store'])->middleware('permission:service-orders.create');
+    Route::get('/service-orders/{serviceOrder}', [ServiceOrderController::class, 'show'])->middleware('permission:service-orders.view');
+    Route::match(['put', 'patch'], '/service-orders/{serviceOrder}', [ServiceOrderController::class, 'update'])->middleware('permission:service-orders.edit');
+    Route::post('/service-orders/{serviceOrder}/complete', [ServiceOrderController::class, 'complete'])->middleware('permission:service-orders.complete');
+    Route::post('/service-orders/{serviceOrder}/cancel', [ServiceOrderController::class, 'cancel'])->middleware('permission:service-orders.cancel');
+    Route::post('/service-orders/{serviceOrder}/cancellation-fee', [ServiceOrderController::class, 'updateCancellation'])->middleware('permission:service-orders.cancel');
 
     // Konfigurasi Toko
     Route::get('/settings', [SettingController::class, 'index'])->middleware('permission:settings.view');

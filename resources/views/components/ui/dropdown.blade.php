@@ -2,6 +2,7 @@
     'align' => 'right',
     'width' => '48',
     'contentClasses' => 'py-1 bg-white',
+    'direction' => 'down',
 ])
 
 @php
@@ -10,6 +11,8 @@
         'top' => 'origin-top',
         default => 'origin-top-right right-0',
     };
+
+    $positionClasses = $direction === 'up' ? 'bottom-full mb-2' : 'mt-2';
 
     $width = match ($width) {
         '48' => 'w-48',
@@ -34,7 +37,7 @@
         x-transition:leave-end="opacity-0 scale-95"
         @click="open = false"
         @click.outside="open = false"
-        class="absolute z-50 mt-2 {{ $width }} rounded-lg shadow-lg ring-1 ring-black/5 {{ $alignmentClasses }}"
+        class="absolute z-50 {{ $positionClasses }} {{ $width }} rounded-lg shadow-lg ring-1 ring-black/5 {{ $alignmentClasses }}"
         style="display: none;"
     >
         <div class="overflow-hidden rounded-lg {{ $contentClasses }}">
