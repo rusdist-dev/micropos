@@ -48,7 +48,7 @@
                 >
                     <div class="mb-2 flex aspect-square items-center justify-center overflow-hidden rounded-lg bg-gray-50 text-gray-300 group-hover:bg-primary-50 group-hover:text-primary-400">
                         <img x-show="p.image_url" :src="p.image_url" :alt="p.name" loading="lazy"
-                            class="h-full w-full object-cover" @error="p.image_url = null" />
+                            class="h-full w-full object-cover" x-on:error="p.image_url = null" />
                         <x-heroicon-o-cube x-show="!p.image_url" class="h-8 w-8" />
                     </div>
                     <span class="line-clamp-2 text-xs font-medium text-gray-800" x-text="p.name"></span>
@@ -71,7 +71,7 @@
                 >
                     <span class="flex h-10 w-10 flex-shrink-0 items-center justify-center overflow-hidden rounded-lg bg-gray-50 text-gray-300 group-hover:bg-primary-50 group-hover:text-primary-400">
                         <img x-show="p.image_url" :src="p.image_url" :alt="p.name" loading="lazy"
-                            class="h-full w-full object-cover" @error="p.image_url = null" />
+                            class="h-full w-full object-cover" x-on:error="p.image_url = null" />
                         <x-heroicon-o-cube x-show="!p.image_url" class="h-5 w-5" />
                     </span>
                     <div class="min-w-0 flex-1">
