@@ -21,7 +21,10 @@ class ProductResource extends JsonResource
             'stock' => $this->stock,
             'min_stock' => $this->min_stock,
             'is_low_stock' => $this->stock <= $this->min_stock,
-            'purchase_price' => (float) $this->purchase_price,
+            'purchase_price' => $this->when(
+                (bool) $request->user()?->can('products.view-cost'),
+                fn () => (float) $this->purchase_price
+            ),
             'image_url' => $this->image_url ? asset('storage/' . ltrim($this->image_url, '/')) : null,
             'description' => $this->description,
             'is_active' => $this->is_active,

@@ -14,7 +14,7 @@ class RolePermissionSeeder extends Seeder
 
         $permissions = [
             'dashboard.view',
-            'products.view', 'products.create', 'products.edit', 'products.delete',
+            'products.view', 'products.create', 'products.edit', 'products.delete', 'products.view-cost',
             'categories.view', 'categories.create', 'categories.edit', 'categories.delete',
             'price-types.view', 'price-types.create', 'price-types.edit', 'price-types.delete',
             'suppliers.view', 'suppliers.create', 'suppliers.edit', 'suppliers.delete',

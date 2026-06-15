@@ -46,8 +46,10 @@
                     :disabled="p.stock <= 0"
                     class="group flex flex-col rounded-xl border border-gray-200 bg-white p-3 text-left transition hover:border-primary-300 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                    <div class="mb-2 flex aspect-square items-center justify-center rounded-lg bg-gray-50 text-gray-300 group-hover:bg-primary-50 group-hover:text-primary-400">
-                        <x-heroicon-o-cube class="h-8 w-8" />
+                    <div class="mb-2 flex aspect-square items-center justify-center overflow-hidden rounded-lg bg-gray-50 text-gray-300 group-hover:bg-primary-50 group-hover:text-primary-400">
+                        <img x-show="p.image_url" :src="p.image_url" :alt="p.name" loading="lazy"
+                            class="h-full w-full object-cover" @error="p.image_url = null" />
+                        <x-heroicon-o-cube x-show="!p.image_url" class="h-8 w-8" />
                     </div>
                     <span class="line-clamp-2 text-xs font-medium text-gray-800" x-text="p.name"></span>
                     <span class="mt-1 text-sm font-semibold text-primary-600" x-text="rupiah(p.prices[priceType])"></span>
@@ -67,8 +69,10 @@
                     :disabled="p.stock <= 0"
                     class="group flex w-full items-center gap-3 rounded-lg border border-gray-200 bg-white p-2.5 text-left transition hover:border-primary-300 hover:bg-primary-50/40 disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                    <span class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-gray-50 text-gray-300 group-hover:bg-primary-50 group-hover:text-primary-400">
-                        <x-heroicon-o-cube class="h-5 w-5" />
+                    <span class="flex h-10 w-10 flex-shrink-0 items-center justify-center overflow-hidden rounded-lg bg-gray-50 text-gray-300 group-hover:bg-primary-50 group-hover:text-primary-400">
+                        <img x-show="p.image_url" :src="p.image_url" :alt="p.name" loading="lazy"
+                            class="h-full w-full object-cover" @error="p.image_url = null" />
+                        <x-heroicon-o-cube x-show="!p.image_url" class="h-5 w-5" />
                     </span>
                     <div class="min-w-0 flex-1">
                         <p class="truncate text-sm font-medium text-gray-800" x-text="p.name"></p>

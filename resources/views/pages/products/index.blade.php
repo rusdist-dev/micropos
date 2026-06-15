@@ -125,7 +125,9 @@
                     <x-ui.th>Produk</x-ui.th>
                     <x-ui.th>Kategori</x-ui.th>
                     <x-ui.th>Merek</x-ui.th>
-                    <x-ui.th align="right">Modal</x-ui.th>
+                    @can('products.view-cost')
+                        <x-ui.th align="right">Modal</x-ui.th>
+                    @endcan
                     <x-ui.th>Harga per Tipe</x-ui.th>
                     <x-ui.th align="center">Stok</x-ui.th>
                     <x-ui.th align="right">Aksi</x-ui.th>
@@ -150,7 +152,9 @@
                             <span x-show="!p.category_name" class="text-sm text-gray-400">—</span>
                         </td>
                         <td class="px-4 py-1 text-sm text-gray-500" x-text="p.brand || '—'"></td>
-                        <td class="whitespace-nowrap px-4 py-1 text-right text-sm text-gray-600" x-text="window.rupiah(p.purchase_price)"></td>
+                        @can('products.view-cost')
+                            <td class="whitespace-nowrap px-4 py-1 text-right text-sm text-gray-600" x-text="window.rupiah(p.purchase_price)"></td>
+                        @endcan
                         <td class="whitespace-nowrap px-4 py-1">
                             <div class="flex flex-col gap-0.5">
                                 <template x-for="pr in p.prices" :key="pr.price_type">

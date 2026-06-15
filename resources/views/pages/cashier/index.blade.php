@@ -64,7 +64,7 @@
                     ]);
                     this.products = prod.data.map((p) => ({
                         id: p.id, name: p.name, sku: p.sku, stock: p.stock, min_stock: p.min_stock,
-                        category_id: p.category_id,
+                        category_id: p.category_id, image_url: p.image_url,
                         prices: Object.fromEntries((p.prices || []).map((r) => [r.price_type, r.price])),
                     }));
                     this.priceTypes = pt.data.map((t) => ({ code: t.code, name: t.name }));

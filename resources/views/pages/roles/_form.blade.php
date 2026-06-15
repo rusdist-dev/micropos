@@ -16,7 +16,7 @@
             returns: 'Retur', customers: 'Pelanggan', services: 'Jasa',
             transactions: 'Transaksi', users: 'Pengguna', roles: 'Role & Akses',
         },
-        actionLabels: { view: 'Lihat', create: 'Tambah', edit: 'Ubah', delete: 'Hapus', 'view-all': 'Lihat Semua', finalize: 'Finalisasi' },
+        actionLabels: { view: 'Lihat', create: 'Tambah', edit: 'Ubah', delete: 'Hapus', 'view-all': 'Lihat Semua', finalize: 'Finalisasi', 'view-cost': 'Lihat Modal' },
 
         async init() {
             await this.loadPermissions();
