@@ -10,6 +10,7 @@
             dateFrom: '',
             dateTo: '',
             page: 1,
+            exporting: false,
 
             params() {
                 const p = new URLSearchParams();
@@ -18,6 +19,12 @@
                 if (this.dateFrom) p.set('date_from', this.dateFrom);
                 if (this.dateTo) p.set('date_to', this.dateTo);
                 return p;
+            },
+            exportExcel() {
+                this.exporting = true;
+                // Unduh via navigasi (cookie sesi terkirim). Hormati filter aktif.
+                window.location.href = '/api/service-orders/export?' + this.params().toString();
+                setTimeout(() => { this.exporting = false; }, 1500);
             },
             async load() {
                 this.loading = true; this.error = null;
@@ -68,11 +75,16 @@
                     <input type="date" x-model="dateTo" class="block w-full rounded-lg border-gray-300 text-sm shadow-sm focus:border-primary-500 focus:ring-primary-500" />
                 </div>
             </div>
-            @can('service-orders.create')
-                <a href="{{ route('service-orders.create') }}">
-                    <x-ui.button type="button" icon="plus">Mulai Servis</x-ui.button>
-                </a>
-            @endcan
+            <div class="flex items-center gap-2">
+                <x-ui.button variant="outline" type="button" icon="arrow-down-tray" ::disabled="exporting" @click="exportExcel()">
+                    <span x-text="exporting ? 'Menyiapkan...' : 'Export Excel'"></span>
+                </x-ui.button>
+                @can('service-orders.create')
+                    <a href="{{ route('service-orders.create') }}">
+                        <x-ui.button type="button" icon="plus">Mulai Servis</x-ui.button>
+                    </a>
+                @endcan
+            </div>
         </div>
 
         <div x-show="loading" class="py-10"><x-ui.loading-spinner size="lg" label="Memuat order servis..." /></div>

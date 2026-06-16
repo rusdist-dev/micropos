@@ -33,17 +33,17 @@
 
     {{-- Konten --}}
     <div class="-mr-1 flex-1 overflow-y-auto pr-1 scrollbar-thin">
-        <div x-show="filteredProducts.length === 0" class="flex h-40 items-center justify-center text-sm text-gray-400">
+        <div x-show="!loadingProducts && products.length === 0" class="flex h-40 items-center justify-center text-sm text-gray-400">
             Produk tidak ditemukan.
         </div>
 
         {{-- Mode kartu --}}
         <div x-show="viewMode === 'card'" class="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-4">
-            <template x-for="p in pagedProducts" :key="p.id">
+            <template x-for="p in products" :key="p.id">
                 <button
                     type="button"
                     @click="addProduct(p)"
-                    :disabled="p.stock <= 0"
+                    :disabled="p.stock <= 0 || !hasPrice(p, priceType)"
                     class="group flex flex-col rounded-xl border border-gray-200 bg-white p-3 text-left transition hover:border-primary-300 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-50"
                 >
                     <div class="mb-2 flex aspect-square items-center justify-center overflow-hidden rounded-lg bg-gray-50 text-gray-300 group-hover:bg-primary-50 group-hover:text-primary-400">
@@ -52,7 +52,7 @@
                         <x-heroicon-o-cube x-show="!p.image_url" class="h-8 w-8" />
                     </div>
                     <span class="line-clamp-2 text-xs font-medium text-gray-800" x-text="p.name"></span>
-                    <span class="mt-1 text-sm font-semibold text-primary-600" x-text="rupiah(p.prices[priceType])"></span>
+                    <span class="mt-1 text-sm font-semibold text-primary-600" x-text="hasPrice(p, priceType) ? rupiah(p.prices[priceType]) : '—'"></span>
                     <span class="mt-0.5 text-[11px]" :class="p.stock <= p.min_stock ? 'text-danger-500' : 'text-gray-400'">
                         Stok: <span x-text="p.stock"></span>
                     </span>
@@ -62,11 +62,11 @@
 
         {{-- Mode daftar --}}
         <div x-show="viewMode === 'list'" class="space-y-2">
-            <template x-for="p in pagedProducts" :key="p.id">
+            <template x-for="p in products" :key="p.id">
                 <button
                     type="button"
                     @click="addProduct(p)"
-                    :disabled="p.stock <= 0"
+                    :disabled="p.stock <= 0 || !hasPrice(p, priceType)"
                     class="group flex w-full items-center gap-3 rounded-lg border border-gray-200 bg-white p-2.5 text-left transition hover:border-primary-300 hover:bg-primary-50/40 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                     <span class="flex h-10 w-10 flex-shrink-0 items-center justify-center overflow-hidden rounded-lg bg-gray-50 text-gray-300 group-hover:bg-primary-50 group-hover:text-primary-400">
@@ -80,7 +80,7 @@
                             SKU: <span x-text="p.sku || '—'"></span> &middot; Stok: <span x-text="p.stock"></span>
                         </p>
                     </div>
-                    <span class="flex-shrink-0 text-sm font-semibold text-primary-600" x-text="rupiah(p.prices[priceType])"></span>
+                    <span class="flex-shrink-0 text-sm font-semibold text-primary-600" x-text="hasPrice(p, priceType) ? rupiah(p.prices[priceType]) : '—'"></span>
                     <x-heroicon-o-plus-circle class="h-5 w-5 flex-shrink-0 text-gray-300 transition group-hover:text-primary-500" />
                 </button>
             </template>
@@ -88,11 +88,11 @@
     </div>
 
     {{-- Pagination katalog (client-side) --}}
-    <div x-show="filteredProducts.length > 0" class="mt-3 border-t border-gray-100 pt-3">
+    <div x-show="catalogTotal > 0" class="mt-3 border-t border-gray-100 pt-3">
         <x-ui.pagination
             page="catalogPage"
             lastPage="catalogLastPage"
-            total="filteredProducts.length"
+            total="catalogTotal"
             handler="goToCatalogPage"
         />
     </div>

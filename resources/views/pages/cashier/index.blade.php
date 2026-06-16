@@ -13,7 +13,10 @@
             productSearch: '',
             selectedCategory: '',
             catalogPage: 1,
-            catalogPerPage: 8,
+            catalogPerPage: 24,
+            catalogLastPage: 1,
+            catalogTotal: 0,
+            loadingProducts: false,
             viewMode: 'card',
             cart: [],
             selectedCustomer: '',
@@ -45,28 +48,23 @@
                 this.viewMode = localStorage.getItem('cashier-view') || 'card';
                 this.loadDrafts();
                 this.loadData();
-                this.$watch('priceType', () => { this.reconcileCart(); this.catalogPage = 1; });
-                // Reset ke halaman 1 setiap kali filter katalog berubah.
-                this.$watch('productSearch', () => this.catalogPage = 1);
-                this.$watch('selectedCategory', () => this.catalogPage = 1);
+                this.loadProducts();
+                this.$watch('priceType', () => this.reconcileCart());
+                // Pencarian & filter kategori dijalankan server-side: reset ke halaman 1 lalu muat ulang.
+                this.$watch('productSearch', () => { this.catalogPage = 1; this.loadProducts(); });
+                this.$watch('selectedCategory', () => { this.catalogPage = 1; this.loadProducts(); });
             },
 
             async loadData() {
                 this.loadingData = true;
                 this.loadError = null;
                 try {
-                    const [prod, pt, cust, svc, cat] = await Promise.all([
-                        window.api.get('/api/products?is_active=1&per_page=500'),
+                    const [pt, cust, svc, cat] = await Promise.all([
                         window.api.get('/api/price-types?all=1&is_active=1'),
                         window.api.get('/api/customers?per_page=500'),
                         window.api.get('/api/services?is_active=1&per_page=500'),
                         window.api.get('/api/categories?all=1'),
                     ]);
-                    this.products = prod.data.map((p) => ({
-                        id: p.id, name: p.name, sku: p.sku, stock: p.stock, min_stock: p.min_stock,
-                        category_id: p.category_id, image_url: p.image_url,
-                        prices: Object.fromEntries((p.prices || []).map((r) => [r.price_type, r.price])),
-                    }));
                     this.priceTypes = pt.data.map((t) => ({ code: t.code, name: t.name }));
                     this.customers = cust.data.map((c) => ({ id: c.id, name: c.name }));
                     this.services = svc.data.map((s) => ({ id: s.id, name: s.name, default_price: s.default_price }));
@@ -76,6 +74,29 @@
                     this.loadError = e.message;
                 } finally {
                     this.loadingData = false;
+                }
+            },
+
+            // Katalog produk: pencarian, filter kategori, dan paginasi dijalankan di server
+            // agar tetap ringan walau jumlah produk sangat banyak.
+            async loadProducts() {
+                this.loadingProducts = true;
+                try {
+                    const params = new URLSearchParams({ is_active: '1', per_page: this.catalogPerPage, page: this.catalogPage });
+                    if (this.productSearch) params.set('search', this.productSearch);
+                    if (this.selectedCategory) params.set('category_id', this.selectedCategory);
+                    const res = await window.api.get('/api/products?' + params.toString());
+                    this.products = res.data.map((p) => ({
+                        id: p.id, name: p.name, sku: p.sku, stock: p.stock, min_stock: p.min_stock,
+                        category_id: p.category_id, image_url: p.image_url,
+                        prices: Object.fromEntries((p.prices || []).map((r) => [r.price_type, r.price])),
+                    }));
+                    this.catalogLastPage = res.meta?.last_page ?? 1;
+                    this.catalogTotal = res.meta?.total ?? this.products.length;
+                } catch (e) {
+                    this.loadError = e.message;
+                } finally {
+                    this.loadingProducts = false;
                 }
             },
             async loadCustomers() {
@@ -90,23 +111,12 @@
             priceTypeName(code) { const t = this.priceTypes.find((t) => t.code === code); return t ? t.name : code; },
             hasPrice(p, code) { return p.prices && p.prices[code] !== undefined && p.prices[code] !== null; },
 
-            get filteredProducts() {
-                const q = this.productSearch.toLowerCase();
-                const cat = this.selectedCategory;
-                return this.products.filter((p) =>
-                    this.hasPrice(p, this.priceType)
-                    && (! cat || p.category_id == cat)
-                    && (! q || p.name.toLowerCase().includes(q) || (p.sku && p.sku.toLowerCase().includes(q)))
-                );
+            goToCatalogPage(p) {
+                const page = Math.min(Math.max(1, p), this.catalogLastPage);
+                if (page === this.catalogPage) return;
+                this.catalogPage = page;
+                this.loadProducts();
             },
-            // Pagination katalog (client-side) atas hasil filter.
-            get catalogLastPage() { return Math.max(1, Math.ceil(this.filteredProducts.length / this.catalogPerPage)); },
-            get pagedProducts() {
-                const page = Math.min(this.catalogPage, this.catalogLastPage);
-                const start = (page - 1) * this.catalogPerPage;
-                return this.filteredProducts.slice(start, start + this.catalogPerPage);
-            },
-            goToCatalogPage(p) { this.catalogPage = Math.min(Math.max(1, p), this.catalogLastPage); },
             get total() { return this.cart.reduce((s, i) => s + this.itemPrice(i) * i.qty, 0); }, // subtotal (sebelum diskon)
             // Diskon dihitung dari input bebas; di-clamp agar 0 <= diskon <= subtotal.
             get discountAmount() {
@@ -209,7 +219,7 @@
                     this.selectedCustomer = '';
                     this.paymentAmount = '';
                     this.resetDiscount();
-                    this.loadData(); // refresh stok produk
+                    this.loadProducts(); // refresh stok produk halaman aktif
                 } catch (e) {
                     this.notify(e.message, 'danger');
                 } finally {
@@ -256,7 +266,7 @@
         {{-- Konten 2 kolom (stack di mobile, berdampingan di desktop) --}}
         <div class="grid grid-cols-1 gap-4 lg:min-h-0 lg:flex-1 lg:grid-cols-5">
             <div class="relative h-[60vh] rounded-xl border border-gray-200 bg-white p-4 lg:h-auto lg:col-span-3">
-                <div x-show="loadingData" class="absolute inset-0 z-10 flex items-center justify-center bg-white/70">
+                <div x-show="loadingData || loadingProducts" class="absolute inset-0 z-10 flex items-center justify-center bg-white/70">
                     <x-ui.loading-spinner size="lg" label="Memuat produk..." />
                 </div>
                 <x-cashier.product-grid />

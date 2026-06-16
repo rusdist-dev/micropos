@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Exports\ServiceOrdersExport;
 use App\Http\Concerns\ApiResponses;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\CancelServiceOrderRequest;
@@ -14,6 +15,8 @@ use App\Services\ServiceOrderService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Maatwebsite\Excel\Facades\Excel;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class ServiceOrderController extends Controller
 {
@@ -82,6 +85,19 @@ class ServiceOrderController extends Controller
         $order = $this->service->updateCancellation($serviceOrder, $data['cancel_note'], $fee);
 
         return $this->respondResource(new ServiceOrderResource($order), 'Biaya pembatalan diperbarui');
+    }
+
+    /** Export Excel 2 sheet sesuai filter aktif (search, status, teknisi, tanggal). */
+    public function export(Request $request): BinaryFileResponse
+    {
+        $orders = $this->filteredQuery($request)
+            ->with(['customer', 'technician', 'operator', 'items'])
+            ->latest()
+            ->get();
+
+        $filename = 'order-servis-' . now()->format('Ymd-His') . '.xlsx';
+
+        return Excel::download(new ServiceOrdersExport($orders), $filename);
     }
 
     /**

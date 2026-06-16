@@ -123,6 +123,7 @@ Route::middleware(['web', 'auth'])->group(function () {
 
     // Order Servis (workflow Process -> Selesai/Batal)
     Route::get('/service-orders', [ServiceOrderController::class, 'index'])->middleware('permission:service-orders.view');
+    Route::get('/service-orders/export', [ServiceOrderController::class, 'export'])->middleware('permission:service-orders.view');
     Route::post('/service-orders', [ServiceOrderController::class, 'store'])->middleware('permission:service-orders.create');
     Route::get('/service-orders/{serviceOrder}', [ServiceOrderController::class, 'show'])->middleware('permission:service-orders.view');
     Route::match(['put', 'patch'], '/service-orders/{serviceOrder}', [ServiceOrderController::class, 'update'])->middleware('permission:service-orders.edit');
