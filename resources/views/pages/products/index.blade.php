@@ -58,8 +58,8 @@
             },
             async loadBrands() {
                 try {
-                    const res = await window.api.get('/api/products?per_page=200');
-                    this.brands = [...new Set(res.data.map((p) => p.brand).filter(Boolean))].sort();
+                    const res = await window.api.get('/api/products/brands');
+                    this.brands = res.data;
                 } catch (e) { /* abaikan */ }
             },
             async loadCategories() {

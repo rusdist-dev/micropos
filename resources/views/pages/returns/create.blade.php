@@ -8,21 +8,15 @@
             original: null,            // { id, invoice_number, customer_name }
             returnLines: [],           // {transaction_item_id, product_id, item_name, price_snapshot, max_qty, qty, restock}
 
-            exchangeSearch: '', showPicker: false,
+            exchangeSearch: '', showPicker: false, searchingExchange: false,
+            exchangeResults: [],       // hasil pencarian produk (server-side)
             exchangeLines: [],         // {key, product_id, name, price_type, availTypes[], price, prices{}, qty, stock}
             paymentAmount: '',
 
             async init() {
                 try {
-                    const [prod, pt] = await Promise.all([
-                        window.api.get('/api/products?is_active=1&per_page=500'),
-                        window.api.get('/api/price-types?all=1&is_active=1'),
-                    ]);
+                    const pt = await window.api.get('/api/price-types?all=1&is_active=1');
                     this.priceTypes = pt.data.map(t => ({ code: t.code, name: t.name }));
-                    this.products = prod.data.map(p => ({
-                        id: p.id, name: p.name, sku: p.sku, stock: p.stock,
-                        prices: Object.fromEntries((p.prices || []).map(r => [r.price_type, r.price])),
-                    }));
                 } catch (e) { this.$store.toasts.error('Gagal memuat data: ' + e.message); } finally { this.loadingMeta = false; }
             },
 
@@ -57,11 +51,21 @@
                 l.qty = q;
             },
 
-            // --- Penukaran ---
-            get filteredProducts() {
-                const q = this.exchangeSearch.toLowerCase();
-                return this.products.filter(p => !q || p.name.toLowerCase().includes(q) || (p.sku && p.sku.toLowerCase().includes(q))).slice(0, 8);
+            // --- Penukaran (pencarian produk server-side) ---
+            async searchExchange() {
+                this.showPicker = true;
+                this.searchingExchange = true;
+                try {
+                    const params = new URLSearchParams({ is_active: '1', per_page: 8 });
+                    if (this.exchangeSearch) params.set('search', this.exchangeSearch);
+                    const res = await window.api.get('/api/products?' + params.toString());
+                    this.exchangeResults = res.data.map(p => ({
+                        id: p.id, name: p.name, sku: p.sku, stock: p.stock,
+                        prices: Object.fromEntries((p.prices || []).map(r => [r.price_type, r.price])),
+                    }));
+                } catch (e) { this.$store.toasts.error(e.message); } finally { this.searchingExchange = false; }
             },
+            get filteredProducts() { return this.exchangeResults; },
             availableTypes(p) { return this.priceTypes.filter(t => p.prices[t.code] !== undefined); },
             addExchange(p) {
                 const types = this.availableTypes(p);
@@ -69,7 +73,7 @@
                 const t = types[0].code;
                 this.exchangeLines.push({ key: 'x-' + Date.now() + '-' + p.id, product_id: p.id, name: p.name,
                     price_type: t, availTypes: types, price: p.prices[t], prices: p.prices, qty: 1, stock: p.stock });
-                this.exchangeSearch = ''; this.showPicker = false;
+                this.exchangeSearch = ''; this.exchangeResults = []; this.showPicker = false;
             },
             onTypeChange(l) { l.price = l.prices[l.price_type]; },
             clampExchange(l) {
@@ -178,7 +182,7 @@
                 {{-- Item penukaran --}}
                 <x-ui.card title="Item Penukaran (opsional)">
                     <div class="relative mb-3" @click.outside="showPicker = false">
-                        <input type="text" x-model="exchangeSearch" @focus="showPicker = true" placeholder="Cari produk untuk ditukar..."
+                        <input type="text" x-model="exchangeSearch" @focus="searchExchange()" @input.debounce.300ms="searchExchange()" placeholder="Cari produk untuk ditukar..."
                             class="block w-full rounded-lg border-gray-300 text-sm shadow-sm focus:border-primary-500 focus:ring-primary-500" />
                         <div x-show="showPicker && filteredProducts.length" x-cloak class="absolute z-20 mt-1 max-h-64 w-full overflow-y-auto rounded-lg border border-gray-200 bg-white shadow-lg scrollbar-thin">
                             <template x-for="p in filteredProducts" :key="p.id">

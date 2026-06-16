@@ -50,7 +50,8 @@ Route::middleware(['web', 'auth'])->group(function () {
     // Produk
     Route::get('/products', [ProductController::class, 'index'])->middleware('permission:products.view');
     Route::post('/products', [ProductController::class, 'store'])->middleware('permission:products.create');
-    // Import (rute spesifik sebelum wildcard /{product}).
+    // Rute spesifik sebelum wildcard /{product}.
+    Route::get('/products/brands', [ProductController::class, 'brands'])->middleware('permission:products.view');
     Route::get('/products/import-template', [ProductController::class, 'importTemplate'])->middleware('permission:products.view');
     Route::post('/products/import', [ProductController::class, 'import'])->middleware('permission:products.create');
     Route::get('/products/{product}', [ProductController::class, 'show'])->middleware('permission:products.view');

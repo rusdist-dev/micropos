@@ -29,13 +29,13 @@
     </div>
 
     <div class="-mr-1 flex-1 overflow-y-auto pr-1 scrollbar-thin">
-        <div x-show="filteredProducts.length === 0" class="flex h-40 items-center justify-center text-sm text-gray-400">
+        <div x-show="!loadingProducts && products.length === 0" class="flex h-40 items-center justify-center text-sm text-gray-400">
             Produk tidak ditemukan.
         </div>
 
         {{-- Mode kartu --}}
         <div x-show="viewMode === 'card'" class="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-4">
-            <template x-for="p in pagedProducts" :key="p.id">
+            <template x-for="p in products" :key="p.id">
                 <button type="button" @click="addProduct(p)" :disabled="p.stock <= 0"
                     class="group flex flex-col rounded-xl border border-gray-200 bg-white p-3 text-left transition hover:border-primary-300 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-50">
                     <div class="mb-2 flex aspect-square items-center justify-center rounded-lg bg-gray-50 text-gray-300 group-hover:bg-primary-50 group-hover:text-primary-400">
@@ -52,7 +52,7 @@
 
         {{-- Mode daftar --}}
         <div x-show="viewMode === 'list'" class="space-y-2">
-            <template x-for="p in pagedProducts" :key="p.id">
+            <template x-for="p in products" :key="p.id">
                 <button type="button" @click="addProduct(p)" :disabled="p.stock <= 0"
                     class="group flex w-full items-center gap-3 rounded-lg border border-gray-200 bg-white p-2.5 text-left transition hover:border-primary-300 hover:bg-primary-50/40 disabled:cursor-not-allowed disabled:opacity-50">
                     <span class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-gray-50 text-gray-300 group-hover:bg-primary-50 group-hover:text-primary-400">
@@ -71,7 +71,7 @@
         </div>
     </div>
 
-    <div x-show="filteredProducts.length > 0" class="mt-3 border-t border-gray-100 pt-3">
-        <x-ui.pagination page="catalogPage" lastPage="catalogLastPage" total="filteredProducts.length" handler="goToCatalogPage" />
+    <div x-show="catalogTotal > 0" class="mt-3 border-t border-gray-100 pt-3">
+        <x-ui.pagination page="catalogPage" lastPage="catalogLastPage" total="catalogTotal" handler="goToCatalogPage" />
     </div>
 </div>

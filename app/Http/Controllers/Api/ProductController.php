@@ -38,6 +38,8 @@ class ProductController extends Controller
             ->when($request->filled('category_id'), fn ($q) => $q->where('category_id', $request->integer('category_id')))
             ->when($request->filled('brand'), fn ($q) => $q->where('brand', $request->string('brand')))
             ->when($request->filled('is_active'), fn ($q) => $q->where('is_active', $request->boolean('is_active')))
+            // Ambil produk spesifik berdasarkan daftar id (mis. memuat stok item order servis).
+            ->when($request->filled('ids'), fn ($q) => $q->whereIn('id', array_filter(array_map('intval', explode(',', (string) $request->query('ids'))))))
             ->orderBy('name')
             ->paginate($request->integer('per_page', 15));
 
@@ -68,6 +70,19 @@ class ProductController extends Controller
         $this->service->delete($product);
 
         return $this->respondMessage('Produk berhasil dihapus');
+    }
+
+    /** Daftar merek unik (untuk filter dropdown, tanpa menarik seluruh produk). */
+    public function brands(): JsonResponse
+    {
+        $brands = Product::query()
+            ->whereNotNull('brand')
+            ->where('brand', '!=', '')
+            ->distinct()
+            ->orderBy('brand')
+            ->pluck('brand');
+
+        return response()->json(['data' => $brands]);
     }
 
     /** Unduh template Excel import produk (kolom tipe harga mengikuti master). */

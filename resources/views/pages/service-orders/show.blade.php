@@ -65,15 +65,31 @@
             },
             async loadMasters() {
                 try {
-                    const [prod, svc, tech] = await Promise.all([
-                        window.api.get('/api/products?is_active=1&per_page=500'),
+                    const [svc, tech] = await Promise.all([
                         window.api.get('/api/services?is_active=1&per_page=500'),
                         window.api.get('/api/technicians?is_active=1&per_page=500'),
                     ]);
-                    this.products = prod.data.map((p) => ({ id: p.id, name: p.name, sku: p.sku, stock: p.stock, purchase_price: Number(p.purchase_price || 0) }));
-                    this.productStock = Object.fromEntries(this.products.map((p) => [p.id, p.stock]));
                     this.services = svc.data.map((s) => ({ id: s.id, name: s.name, default_price: s.default_price }));
                     this.technicians = tech.data.map((t) => ({ id: t.id, name: t.name }));
+
+                    // Stok produk yang sudah ada di order (untuk batas qty) diambil per-id, bukan seluruh katalog.
+                    const ids = [...new Set(this.rows.filter((r) => r.type === 'product' && r.product_id).map((r) => r.product_id))];
+                    if (ids.length) {
+                        const prod = await window.api.get('/api/products?ids=' + ids.join(',') + '&per_page=' + ids.length);
+                        prod.data.forEach((p) => { this.productStock[p.id] = p.stock; });
+                    }
+                } catch (e) { this.notify(e.message, 'danger'); }
+            },
+
+            // Pencarian produk untuk modal "Tambah Bahan" (server-side).
+            async searchProducts() {
+                try {
+                    const params = new URLSearchParams({ is_active: '1', per_page: 20 });
+                    if (this.productSearch) params.set('search', this.productSearch);
+                    const res = await window.api.get('/api/products?' + params.toString());
+                    this.products = res.data.map((p) => ({ id: p.id, name: p.name, sku: p.sku, stock: p.stock, purchase_price: Number(p.purchase_price || 0) }));
+                    // Segarkan peta stok agar batas qty akurat untuk produk yang baru terlihat.
+                    this.products.forEach((p) => { this.productStock[p.id] = p.stock; });
                 } catch (e) { this.notify(e.message, 'danger'); }
             },
 
@@ -82,10 +98,7 @@
                 if (row.type !== 'product' || ! row.product_id) return 999999;
                 return (this.productStock[row.product_id] || 0) + (this.baseConsumption[row.product_id] || 0);
             },
-            get filteredProducts() {
-                const q = this.productSearch.toLowerCase();
-                return this.products.filter((p) => ! q || p.name.toLowerCase().includes(q) || (p.sku && p.sku.toLowerCase().includes(q)));
-            },
+            get filteredProducts() { return this.products; },
 
             get total() { return this.rows.reduce((s, r) => s + Number(r.price) * Number(r.qty), 0); },
             get discountAmount() {
@@ -186,7 +199,7 @@
                 } catch (e) { this.notify(e.message, 'danger'); } finally { this.canceling = false; }
             },
         }"
-        x-init="load()"
+        x-init="load(); $watch('productSearch', () => searchProducts())"
     >
         <div x-show="loading" class="py-10"><x-ui.loading-spinner size="lg" label="Memuat..." /></div>
         <template x-if="error"><x-ui.alert variant="danger" title="Gagal memuat"><span x-text="error"></span></x-ui.alert></template>
@@ -290,7 +303,7 @@
                 <div class="flex items-center justify-between border-b border-gray-100 px-4 py-3">
                     <h3 class="text-sm font-semibold text-gray-800">Item Servis</h3>
                     <div class="flex items-center gap-2" x-show="isProcess">
-                        <x-ui.button variant="outline" size="sm" type="button" icon="cube" @click="productSearch = ''; showAddProduct = true">Tambah Bahan</x-ui.button>
+                        <x-ui.button variant="outline" size="sm" type="button" icon="cube" @click="productSearch = ''; showAddProduct = true; searchProducts()">Tambah Bahan</x-ui.button>
                         <x-ui.button variant="outline" size="sm" type="button" icon="wrench-screwdriver" @click="openAddService()">Tambah Jasa</x-ui.button>
                     </div>
                 </div>

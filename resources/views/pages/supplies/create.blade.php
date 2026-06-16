@@ -2,38 +2,45 @@
     <div
         x-data="{
             loading: true, saving: false, loadError: null,
-            suppliers: [], products: [], priceTypes: [],
+            suppliers: [], productResults: [], priceTypes: [],
             supplierId: '', note: '',
-            productSearch: '', showPicker: false,
+            productSearch: '', showPicker: false, searchingProducts: false,
             lines: [],   // {key, product_id, name, qty, purchase_price, currentCost, prices:{code:val}}
 
             async init() {
                 try {
-                    const [sup, prod, pt] = await Promise.all([
+                    const [sup, pt] = await Promise.all([
                         window.api.get('/api/suppliers?all=1&is_active=1'),
-                        window.api.get('/api/products?per_page=500'),
                         window.api.get('/api/price-types?all=1&is_active=1'),
                     ]);
                     this.suppliers = sup.data;
                     this.priceTypes = pt.data.map(t => ({ code: t.code, name: t.name }));
-                    this.products = prod.data.map(p => ({
+                } catch (e) { this.loadError = e.message; } finally { this.loading = false; }
+            },
+            // Pencarian produk server-side agar ringan walau produk sangat banyak.
+            async searchProducts() {
+                this.showPicker = true;
+                this.searchingProducts = true;
+                try {
+                    const params = new URLSearchParams({ per_page: 8 });
+                    if (this.productSearch) params.set('search', this.productSearch);
+                    const res = await window.api.get('/api/products?' + params.toString());
+                    this.productResults = res.data.map(p => ({
                         id: p.id, name: p.name, sku: p.sku, purchase_price: p.purchase_price,
                         prices: Object.fromEntries((p.prices || []).map(r => [r.price_type, r.price])),
                     }));
-                } catch (e) { this.loadError = e.message; } finally { this.loading = false; }
+                } catch (e) { this.$store.toasts.error(e.message); } finally { this.searchingProducts = false; }
             },
             get filteredProducts() {
-                const q = this.productSearch.toLowerCase();
                 const inCart = this.lines.map(l => l.product_id);
-                return this.products.filter(p => !inCart.includes(p.id) &&
-                    (!q || p.name.toLowerCase().includes(q) || (p.sku && p.sku.toLowerCase().includes(q)))).slice(0, 8);
+                return this.productResults.filter(p => !inCart.includes(p.id));
             },
             addProduct(p) {
                 const prices = {};
                 this.priceTypes.forEach(t => { prices[t.code] = p.prices[t.code] ?? ''; });
                 this.lines.push({ key: 'l-' + p.id, product_id: p.id, name: p.name, qty: 1,
                     purchase_price: p.purchase_price, currentCost: p.purchase_price, prices });
-                this.productSearch = ''; this.showPicker = false;
+                this.productSearch = ''; this.productResults = []; this.showPicker = false;
             },
             removeLine(i) { this.lines.splice(i, 1); },
             lineCost(l) { return Number(l.qty || 0) * Number(l.purchase_price || 0); },
@@ -85,7 +92,7 @@
 
                     <div class="relative mt-4" @click.outside="showPicker = false">
                         <label class="mb-1 block text-sm font-medium text-gray-700">Tambah Produk</label>
-                        <input type="text" x-model="productSearch" @focus="showPicker = true" placeholder="Cari produk (nama/SKU)..."
+                        <input type="text" x-model="productSearch" @focus="searchProducts()" @input.debounce.300ms="searchProducts()" placeholder="Cari produk (nama/SKU)..."
                             class="block w-full rounded-lg border-gray-300 text-sm shadow-sm focus:border-primary-500 focus:ring-primary-500" />
                         <div x-show="showPicker && filteredProducts.length" x-cloak class="absolute z-20 mt-1 max-h-64 w-full overflow-y-auto rounded-lg border border-gray-200 bg-white shadow-lg scrollbar-thin">
                             <template x-for="p in filteredProducts" :key="p.id">
