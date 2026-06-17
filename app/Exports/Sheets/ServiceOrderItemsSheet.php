@@ -37,10 +37,18 @@ class ServiceOrderItemsSheet implements FromArray, WithHeadings, WithTitle, With
         $rows = [];
         $no = 1;
         $sumSubtotal = 0;
+        $sumService = 0;
+        $sumProduct = 0;
 
         foreach ($this->orders as $order) {
             foreach ($order->items as $item) {
-                $sumSubtotal += (float) $item->subtotal;
+                $subtotal = (float) $item->subtotal;
+                $sumSubtotal += $subtotal;
+                if ($item->item_type === ItemType::Product) {
+                    $sumProduct += $subtotal;
+                } else {
+                    $sumService += $subtotal;
+                }
 
                 $rows[] = [
                     $no++,
@@ -58,6 +66,8 @@ class ServiceOrderItemsSheet implements FromArray, WithHeadings, WithTitle, With
         }
 
         $rows[] = ['', '', '', '', '', '', '', '', 'TOTAL', $sumSubtotal];
+        $rows[] = ['', '', '', '', '', '', '', '', 'Total Jasa', $sumService];
+        $rows[] = ['', '', '', '', '', '', '', '', 'Total Produk', $sumProduct];
 
         return $rows;
     }
@@ -75,8 +85,9 @@ class ServiceOrderItemsSheet implements FromArray, WithHeadings, WithTitle, With
         $sheet->getStyle('A1:J1')->getFont()->setBold(true);
 
         $itemCount = $this->orders->sum(fn ($o) => $o->items->count());
-        $totalRow = $itemCount + 2; // heading + baris data + baris total
-        $sheet->getStyle("I{$totalRow}:J{$totalRow}")->getFont()->setBold(true);
+        $grandTotalRow = $itemCount + 2;   // heading + baris data + baris TOTAL
+        $totalProdukRow = $itemCount + 4;  // + baris Total Jasa & Total Produk
+        $sheet->getStyle("I{$grandTotalRow}:J{$totalProdukRow}")->getFont()->setBold(true);
 
         return [];
     }
