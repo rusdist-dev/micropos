@@ -81,7 +81,7 @@
                 } catch (e) { this.notify(e.message, 'danger'); }
             },
 
-            // Pencarian produk untuk modal "Tambah Bahan" (server-side).
+            // Pencarian produk untuk modal Tambah Bahan (server-side).
             async searchProducts() {
                 try {
                     const params = new URLSearchParams({ is_active: '1', per_page: 20 });
