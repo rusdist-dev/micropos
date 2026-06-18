@@ -33,4 +33,14 @@ class DashboardController extends Controller
     {
         return response()->json(['data' => $this->service->topProducts($request->integer('limit', 5))]);
     }
+
+    public function lowStockProducts(Request $request): JsonResponse
+    {
+        return response()->json(['data' => $this->service->lowStockProducts($request->integer('limit', 8))]);
+    }
+
+    public function loyalCustomers(Request $request): JsonResponse
+    {
+        return response()->json(['data' => $this->service->loyalCustomers($request->integer('limit', 5))]);
+    }
 }

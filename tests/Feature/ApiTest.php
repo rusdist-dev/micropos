@@ -138,7 +138,12 @@ class ApiTest extends TestCase
     {
         $this->actingAs($this->admin)->getJson('/api/dashboard/stats')
             ->assertStatus(200)
-            ->assertJsonStructure(['data' => ['total_products', 'total_asset_value', 'today_sales', 'low_stock_count']]);
+            ->assertJsonStructure(['data' => [
+                'total_products', 'total_asset_value', 'low_stock_count',
+                'today_sales', 'today_profit', 'today_margin_pct',
+                'month_sales', 'month_profit', 'month_margin_pct',
+                'compare' => ['today_sales', 'today_profit', 'month_sales', 'month_profit'],
+            ]]);
     }
 
     public function test_kasir_can_create_customer(): void

@@ -37,6 +37,8 @@ Route::middleware(['web', 'auth'])->group(function () {
         Route::get('/dashboard/stats', [DashboardController::class, 'stats']);
         Route::get('/dashboard/sales-chart', [DashboardController::class, 'salesChart']);
         Route::get('/dashboard/top-products', [DashboardController::class, 'topProducts']);
+        Route::get('/dashboard/low-stock-products', [DashboardController::class, 'lowStockProducts']);
+        Route::get('/dashboard/loyal-customers', [DashboardController::class, 'loyalCustomers']);
     });
 
     // Kategori (master). List/show dipakai filter kasir & form produk (gated products.view
