@@ -55,6 +55,7 @@ Route::middleware(['web', 'auth'])->group(function () {
     // Rute spesifik sebelum wildcard /{product}.
     Route::get('/products/brands', [ProductController::class, 'brands'])->middleware('permission:products.view');
     Route::get('/products/import-template', [ProductController::class, 'importTemplate'])->middleware('permission:products.view');
+    Route::get('/products/export', [ProductController::class, 'export'])->middleware('permission:products.view');
     Route::post('/products/import', [ProductController::class, 'import'])->middleware('permission:products.create');
     Route::get('/products/{product}', [ProductController::class, 'show'])->middleware('permission:products.view');
     Route::match(['put', 'patch'], '/products/{product}', [ProductController::class, 'update'])->middleware('permission:products.edit');

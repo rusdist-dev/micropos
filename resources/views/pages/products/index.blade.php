@@ -19,6 +19,14 @@
             importFile: null,
             importResult: null,
             openImport() { this.importFile = null; this.importResult = null; this.showImport = true; },
+            exportExcel() {
+                const params = new URLSearchParams();
+                if (this.search) params.set('search', this.search);
+                if (this.brand) params.set('brand', this.brand);
+                if (this.category) params.set('category_id', this.category);
+                const qs = params.toString();
+                window.location.href = '/api/products/export' + (qs ? '?' + qs : '');
+            },
             onImportFile(e) { this.importFile = e.target.files[0] || null; },
             downloadTemplate() { window.location.href = '/api/products/import-template'; },
             async doImport() {
@@ -104,7 +112,26 @@
                 </select>
             </div>
             <div class="flex items-center gap-2">
-                <x-ui.button variant="outline" type="button" icon="arrow-up-tray" @click="openImport()">Import Excel</x-ui.button>
+                <x-ui.dropdown align="right" width="56">
+                    <x-slot:trigger>
+                        <x-ui.button variant="outline" type="button" icon="table-cells">
+                            Excel
+                            <x-heroicon-o-chevron-down class="h-4 w-4" />
+                        </x-ui.button>
+                    </x-slot:trigger>
+                    <x-slot:content>
+                        <button type="button" @click="exportExcel()"
+                            class="flex w-full items-center gap-2 px-4 py-2 text-left text-sm text-gray-700 transition hover:bg-gray-50">
+                            <x-heroicon-o-arrow-down-tray class="h-4 w-4 text-gray-400" />
+                            Download Excel
+                        </button>
+                        <button type="button" @click="openImport()"
+                            class="flex w-full items-center gap-2 px-4 py-2 text-left text-sm text-gray-700 transition hover:bg-gray-50">
+                            <x-heroicon-o-arrow-up-tray class="h-4 w-4 text-gray-400" />
+                            Import Excel
+                        </button>
+                    </x-slot:content>
+                </x-ui.dropdown>
                 <x-ui.button :href="route('products.create')" icon="plus">Tambah Produk</x-ui.button>
             </div>
         </div>

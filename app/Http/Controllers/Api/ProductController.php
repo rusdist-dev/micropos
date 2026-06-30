@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Exports\ProductImportTemplateExport;
+use App\Exports\ProductsExport;
 use App\Http\Concerns\ApiResponses;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreProductRequest;
@@ -89,6 +90,21 @@ class ProductController extends Controller
     public function importTemplate(): BinaryFileResponse
     {
         return Excel::download(new ProductImportTemplateExport, 'template-import-produk.xlsx');
+    }
+
+    /** Export produk ke Excel sesuai filter aktif (search/kategori/merek/status). */
+    public function export(Request $request): BinaryFileResponse
+    {
+        $filters = [
+            'search' => $request->filled('search') ? (string) $request->string('search') : null,
+            'category_id' => $request->filled('category_id') ? $request->integer('category_id') : null,
+            'brand' => $request->filled('brand') ? (string) $request->string('brand') : null,
+            'is_active' => $request->filled('is_active') ? $request->boolean('is_active') : null,
+        ];
+
+        $filename = 'produk-' . now()->format('Ymd-His') . '.xlsx';
+
+        return Excel::download(new ProductsExport($filters), $filename);
     }
 
     /** Import produk dari file Excel (1 sheet). */
