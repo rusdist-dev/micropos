@@ -155,19 +155,19 @@ document.addEventListener('alpine:init', () => {
             const phone = store.phone ? `<div class="center muted">${e(store.phone)}</div>` : '';
             return `<!doctype html><html><head><meta charset="utf-8"><title>${e(trx.invoice_number) || 'Struk'}</title>
                 <style>
-                    @page { size: 58mm auto; margin: 2mm; }
-                    * { font-family: 'Courier New', monospace; font-size: 11px; font-weight: 700; color: #000; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-                    body { width: 54mm; margin: 0 auto; padding: 0; color: #000; }
-                    h1 { font-size: 15px; font-weight: 900; text-align: center; margin: 0 0 2px; }
+                    @page { size: 48mm auto; margin: 1mm; }
+                    * { font-family: 'Courier New', monospace; font-size: 10px; font-weight: 700; color: #000; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+                    body { width: 46mm; margin: 0 auto; padding: 0; color: #000; }
+                    h1 { font-size: 13px; font-weight: 900; text-align: center; margin: 0 0 2px; }
                     .center { text-align: center; }
-                    .muted { color: #000; font-size: 10px; }
-                    .logo { display: block; max-height: 44px; margin: 0 auto 4px; }
+                    .muted { color: #000; font-size: 9px; }
+                    .logo { display: block; max-height: 40px; margin: 0 auto 4px; }
                     table { width: 100%; border-collapse: collapse; }
-                    td { padding: 2px 0; vertical-align: top; }
-                    .r { text-align: right; }
+                    td { padding: 2px 0; vertical-align: top; word-break: break-word; }
+                    .r { text-align: right; white-space: nowrap; padding-left: 4px; }
                     hr { border: none; border-top: 1px dashed #000; margin: 5px 0; }
-                    .row { display: flex; justify-content: space-between; gap: 6px; }
-                    .bold { font-weight: 900; font-size: 13px; }
+                    .row { display: flex; justify-content: space-between; gap: 4px; }
+                    .bold { font-weight: 900; font-size: 12px; }
                 </style></head><body>
                 ${logo}
                 <h1>${e(store.name)}</h1>
@@ -289,19 +289,19 @@ document.addEventListener('alpine:init', () => {
             const phone = store.phone ? `<div class="center muted">${e(store.phone)}</div>` : '';
             return `<!doctype html><html><head><meta charset="utf-8"><title>${e(o.invoice_number) || 'Servis'}</title>
                 <style>
-                    @page { size: 58mm auto; margin: 2mm; }
-                    * { font-family: 'Courier New', monospace; font-size: 11px; font-weight: 700; color: #000; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-                    body { width: 54mm; margin: 0 auto; padding: 0; color: #000; }
-                    h1 { font-size: 15px; font-weight: 900; text-align: center; margin: 0 0 2px; }
+                    @page { size: 48mm auto; margin: 1mm; }
+                    * { font-family: 'Courier New', monospace; font-size: 10px; font-weight: 700; color: #000; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+                    body { width: 46mm; margin: 0 auto; padding: 0; color: #000; }
+                    h1 { font-size: 13px; font-weight: 900; text-align: center; margin: 0 0 2px; }
                     .center { text-align: center; }
-                    .muted { color: #000; font-size: 10px; }
-                    .logo { display: block; max-height: 44px; margin: 0 auto 4px; }
+                    .muted { color: #000; font-size: 9px; }
+                    .logo { display: block; max-height: 40px; margin: 0 auto 4px; }
                     table { width: 100%; border-collapse: collapse; }
-                    td { padding: 2px 0; vertical-align: top; }
-                    .r { text-align: right; }
+                    td { padding: 2px 0; vertical-align: top; word-break: break-word; }
+                    .r { text-align: right; white-space: nowrap; padding-left: 4px; }
                     hr { border: none; border-top: 1px dashed #000; margin: 5px 0; }
-                    .row { display: flex; justify-content: space-between; gap: 6px; }
-                    .bold { font-weight: 900; font-size: 13px; }
+                    .row { display: flex; justify-content: space-between; gap: 4px; }
+                    .bold { font-weight: 900; font-size: 12px; }
                 </style></head><body>
                 ${logo}
                 <h1>${e(store.name)}</h1>
