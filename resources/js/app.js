@@ -107,7 +107,7 @@ window.flash = {
 
 // Toast global via Alpine store. Dipakai: $store.toasts.push('Pesan', 'success').
 document.addEventListener('alpine:init', () => {
-    // Cetak struk: pilih ukuran 'thermal' (80mm) atau 'a4'.
+    // Cetak struk: pilih ukuran 'thermal' (58mm) atau 'a4'.
     Alpine.store('receipt', {
         money(v) {
             return 'Rp ' + Number(v || 0).toLocaleString('id-ID');
@@ -133,7 +133,7 @@ document.addEventListener('alpine:init', () => {
         print(trx, size = 'thermal') {
             if (!trx) return;
             const html = size === 'a4' ? this.a4Html(trx) : this.thermalHtml(trx);
-            const features = size === 'a4' ? 'width=820,height=920' : 'width=380,height=640';
+            const features = size === 'a4' ? 'width=820,height=920' : 'width=300,height=640';
             const w = window.open('', '_blank', features);
             if (!w) return;
             w.document.write(html);
@@ -155,19 +155,19 @@ document.addEventListener('alpine:init', () => {
             const phone = store.phone ? `<div class="center muted">${e(store.phone)}</div>` : '';
             return `<!doctype html><html><head><meta charset="utf-8"><title>${e(trx.invoice_number) || 'Struk'}</title>
                 <style>
-                    @page { size: 80mm auto; margin: 3mm; }
-                    * { font-family: 'Courier New', monospace; font-size: 12px; }
-                    body { width: 72mm; margin: 0 auto; padding: 0; color: #000; }
-                    h1 { font-size: 16px; text-align: center; margin: 0 0 2px; }
+                    @page { size: 58mm auto; margin: 2mm; }
+                    * { font-family: 'Courier New', monospace; font-size: 11px; font-weight: 700; color: #000; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+                    body { width: 54mm; margin: 0 auto; padding: 0; color: #000; }
+                    h1 { font-size: 15px; font-weight: 900; text-align: center; margin: 0 0 2px; }
                     .center { text-align: center; }
-                    .muted { color: #555; font-size: 11px; }
-                    .logo { display: block; max-height: 48px; margin: 0 auto 4px; }
+                    .muted { color: #000; font-size: 10px; }
+                    .logo { display: block; max-height: 44px; margin: 0 auto 4px; }
                     table { width: 100%; border-collapse: collapse; }
                     td { padding: 2px 0; vertical-align: top; }
                     .r { text-align: right; }
-                    hr { border: none; border-top: 1px dashed #000; margin: 6px 0; }
-                    .row { display: flex; justify-content: space-between; }
-                    .bold { font-weight: bold; }
+                    hr { border: none; border-top: 1px dashed #000; margin: 5px 0; }
+                    .row { display: flex; justify-content: space-between; gap: 6px; }
+                    .bold { font-weight: 900; font-size: 13px; }
                 </style></head><body>
                 ${logo}
                 <h1>${e(store.name)}</h1>
@@ -268,7 +268,7 @@ document.addEventListener('alpine:init', () => {
         printService(order, size = 'thermal') {
             if (!order) return;
             const html = size === 'a4' ? this.serviceA4Html(order) : this.serviceThermalHtml(order);
-            const features = size === 'a4' ? 'width=820,height=920' : 'width=380,height=640';
+            const features = size === 'a4' ? 'width=820,height=920' : 'width=300,height=640';
             const w = window.open('', '_blank', features);
             if (!w) return;
             w.document.write(html);
@@ -289,19 +289,19 @@ document.addEventListener('alpine:init', () => {
             const phone = store.phone ? `<div class="center muted">${e(store.phone)}</div>` : '';
             return `<!doctype html><html><head><meta charset="utf-8"><title>${e(o.invoice_number) || 'Servis'}</title>
                 <style>
-                    @page { size: 80mm auto; margin: 3mm; }
-                    * { font-family: 'Courier New', monospace; font-size: 12px; }
-                    body { width: 72mm; margin: 0 auto; padding: 0; color: #000; }
-                    h1 { font-size: 16px; text-align: center; margin: 0 0 2px; }
+                    @page { size: 58mm auto; margin: 2mm; }
+                    * { font-family: 'Courier New', monospace; font-size: 11px; font-weight: 700; color: #000; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+                    body { width: 54mm; margin: 0 auto; padding: 0; color: #000; }
+                    h1 { font-size: 15px; font-weight: 900; text-align: center; margin: 0 0 2px; }
                     .center { text-align: center; }
-                    .muted { color: #555; font-size: 11px; }
-                    .logo { display: block; max-height: 48px; margin: 0 auto 4px; }
+                    .muted { color: #000; font-size: 10px; }
+                    .logo { display: block; max-height: 44px; margin: 0 auto 4px; }
                     table { width: 100%; border-collapse: collapse; }
                     td { padding: 2px 0; vertical-align: top; }
                     .r { text-align: right; }
-                    hr { border: none; border-top: 1px dashed #000; margin: 6px 0; }
-                    .row { display: flex; justify-content: space-between; }
-                    .bold { font-weight: bold; }
+                    hr { border: none; border-top: 1px dashed #000; margin: 5px 0; }
+                    .row { display: flex; justify-content: space-between; gap: 6px; }
+                    .bold { font-weight: 900; font-size: 13px; }
                 </style></head><body>
                 ${logo}
                 <h1>${e(store.name)}</h1>

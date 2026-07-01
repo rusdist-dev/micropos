@@ -81,7 +81,7 @@
                         <div class="flex justify-between border-t border-gray-100 pt-3"><dt class="text-gray-500">Kembalian</dt><dd class="font-semibold text-primary-600" x-text="window.rupiah(trx?.change_amount)"></dd></div>
                     </dl>
                     <div class="mt-4 grid grid-cols-2 gap-2">
-                        <x-ui.button variant="outline" type="button" icon="printer" @click="$store.receipt.print(trx, 'thermal')">Struk 80mm</x-ui.button>
+                        <x-ui.button variant="outline" type="button" icon="printer" @click="$store.receipt.print(trx, 'thermal')">Struk 58mm</x-ui.button>
                         <x-ui.button type="button" icon="document-text" @click="$store.receipt.print(trx, 'a4')">Cetak A4</x-ui.button>
                     </div>
                 </x-ui.card>

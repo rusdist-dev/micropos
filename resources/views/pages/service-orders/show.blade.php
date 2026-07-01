@@ -226,7 +226,7 @@
                         <x-slot:content>
                             <button type="button" @click="$store.receipt.printService(order, 'thermal')" class="flex w-full items-center gap-2 px-4 py-2 text-left text-sm text-gray-700 transition hover:bg-gray-50">
                                 <x-heroicon-o-printer class="h-4 w-4 text-gray-400" />
-                                Struk 80mm
+                                Struk 58mm
                             </button>
                             <button type="button" @click="$store.receipt.printService(order, 'a4')" class="flex w-full items-center gap-2 px-4 py-2 text-left text-sm text-gray-700 transition hover:bg-gray-50">
                                 <x-heroicon-o-document-text class="h-4 w-4 text-gray-400" />
