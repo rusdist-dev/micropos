@@ -6,6 +6,7 @@ use App\Exports\TransactionsExport;
 use App\Http\Concerns\ApiResponses;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreTransactionRequest;
+use App\Http\Requests\UpdateTransactionRequest;
 use App\Http\Resources\TransactionResource;
 use App\Models\Transaction;
 use App\Models\User;
@@ -39,6 +40,18 @@ class TransactionController extends Controller
         $transaction = $this->service->create($request->validated(), $request->user());
 
         return $this->respondCreated(new TransactionResource($transaction), 'Transaksi berhasil disimpan');
+    }
+
+    public function update(UpdateTransactionRequest $request, Transaction $transaction): JsonResponse
+    {
+        $user = $request->user();
+        if (! $user->can('transactions.view-all') && $transaction->kasir_id !== $user->id) {
+            return $this->respondMessage('Anda tidak berhak mengedit transaksi ini.', 403);
+        }
+
+        $updated = $this->service->update($transaction, $request->validated(), $user);
+
+        return $this->respondResource(new TransactionResource($updated), 'Transaksi berhasil diperbarui');
     }
 
     public function show(Request $request, Transaction $transaction): JsonResponse

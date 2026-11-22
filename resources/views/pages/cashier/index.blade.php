@@ -43,6 +43,7 @@
 
             showDrafts: false,
             drafts: [],
+            activeDraftId: null, // draft yang sedang dilanjutkan (tetap tersimpan)
 
             init() {
                 this.viewMode = localStorage.getItem('cashier-view') || 'card';
@@ -117,6 +118,7 @@
                 this.catalogPage = page;
                 this.loadProducts();
             },
+            get totalQty() { return this.cart.reduce((s, i) => s + (Number(i.qty) || 0), 0); },
             get total() { return this.cart.reduce((s, i) => s + this.itemPrice(i) * i.qty, 0); }, // subtotal (sebelum diskon)
             // Diskon dihitung dari input bebas; di-clamp agar 0 <= diskon <= subtotal.
             get discountAmount() {
@@ -160,7 +162,7 @@
                 item.qty = q;
             },
             removeItem(idx) { this.cart.splice(idx, 1); },
-            clearCart() { this.cart = []; this.selectedCustomer = ''; this.resetDiscount(); },
+            clearCart() { this.activeDraftId = null; this.cart = []; this.selectedCustomer = ''; this.resetDiscount(); },
             reconcileCart() {
                 const removed = this.cart.filter((i) => i.type === 'product' && ! this.hasPrice(i, this.priceType));
                 if (removed.length === 0) return;
@@ -215,6 +217,8 @@
                     this.lastChange = res.data.change_amount;
                     this.showPayment = false;
                     this.showSuccess = true;
+                    if (this.activeDraftId !== null) this.deleteDraft(this.activeDraftId); // sudah dibayar
+                    this.activeDraftId = null;
                     this.cart = [];
                     this.selectedCustomer = '';
                     this.paymentAmount = '';
@@ -232,14 +236,18 @@
             customerName(id) { if (! id) return 'Pelanggan Umum'; const c = this.customers.find((c) => c.id == id); return c ? c.name : 'Pelanggan Umum'; },
             saveDraft() {
                 if (this.cart.length === 0) return;
-                this.drafts.unshift({
-                    id: Date.now(), label: this.customerName(this.selectedCustomer),
+                const draft = {
+                    id: this.activeDraftId ?? Date.now(), label: this.customerName(this.selectedCustomer),
                     cart: JSON.parse(JSON.stringify(this.cart)), selectedCustomer: this.selectedCustomer, priceType: this.priceType,
                     discountType: this.discountType, discountInput: this.discountInput,
                     itemCount: this.cart.length, total: this.total,
                     savedAt: new Date().toLocaleString('id-ID', { dateStyle: 'short', timeStyle: 'short' }),
-                });
+                };
+                // Jika berasal dari draft yang dilanjutkan, perbarui draft tsb alih-alih membuat duplikat.
+                const idx = this.drafts.findIndex((d) => d.id === draft.id);
+                if (idx >= 0) this.drafts.splice(idx, 1, draft); else this.drafts.unshift(draft);
                 this.persistDrafts();
+                this.activeDraftId = null;
                 this.cart = []; this.selectedCustomer = ''; this.resetDiscount(); this.notify('Transaksi disimpan sebagai draft.', 'success');
             },
             openDraft(draft) {
@@ -249,7 +257,7 @@
                 this.priceType = draft.priceType;
                 this.discountType = draft.discountType || 'amount';
                 this.discountInput = draft.discountInput || '';
-                this.deleteDraft(draft.id);
+                this.activeDraftId = draft.id;
                 this.showDrafts = false;
             },
             deleteDraft(id) { this.drafts = this.drafts.filter((d) => d.id !== id); this.persistDrafts(); },

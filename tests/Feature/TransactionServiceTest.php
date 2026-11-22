@@ -140,4 +140,51 @@ class TransactionServiceTest extends TestCase
         $this->assertStringEndsWith('-00001', $first->invoice_number);
         $this->assertStringEndsWith('-00002', $second->invoice_number);
     }
+    public function test_update_restores_old_stock_applies_new_and_keeps_old_price(): void
+    {
+        $kasir = User::factory()->create();
+        $product = $this->makeProduct(stock: 10);
+
+        $trx = $this->service->create([
+            'payment_amount' => 50000,
+            'items' => [['item_type' => 'product', 'product_id' => $product->id, 'price_type' => 'umum', 'qty' => 3]],
+        ], $kasir);
+        $this->assertEquals(7, $product->fresh()->stock);
+
+        // Harga produk naik setelah transaksi; item lama harus tetap memakai harga snapshot.
+        $product->prices()->where('price_type', 'umum')->update(['price' => 20000]);
+
+        $updated = $this->service->update($trx, [
+            'payment_amount' => 100000,
+            'items' => [['item_type' => 'product', 'product_id' => $product->id, 'price_type' => 'umum', 'qty' => 5]],
+        ], $kasir);
+
+        $this->assertEquals(5, $product->fresh()->stock);   // 10 - 5
+        $this->assertEquals(50000, $updated->total);        // 10000 * 5 (harga lama)
+        $this->assertEquals($trx->invoice_number, $updated->invoice_number);
+        $this->assertCount(1, $updated->items);
+    }
+
+    public function test_update_rejects_insufficient_stock_and_rolls_back(): void
+    {
+        $kasir = User::factory()->create();
+        $product = $this->makeProduct(stock: 5);
+
+        $trx = $this->service->create([
+            'payment_amount' => 50000,
+            'items' => [['item_type' => 'product', 'product_id' => $product->id, 'price_type' => 'umum', 'qty' => 2]],
+        ], $kasir);
+
+        try {
+            $this->service->update($trx, [
+                'payment_amount' => 999999,
+                'items' => [['item_type' => 'product', 'product_id' => $product->id, 'price_type' => 'umum', 'qty' => 9]],
+            ], $kasir);
+            $this->fail('Harus gagal karena stok kurang.');
+        } catch (ValidationException) {
+        }
+
+        $this->assertEquals(3, $product->fresh()->stock);
+        $this->assertEquals(2, $trx->fresh()->items()->first()->qty);
+    }
 }

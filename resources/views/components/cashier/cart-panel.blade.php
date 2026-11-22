@@ -50,7 +50,7 @@
                 <div class="rounded-lg border border-gray-200 p-3">
                     <div class="flex items-start justify-between gap-2">
                         <div class="min-w-0 flex-1">
-                            <p class="truncate text-sm font-medium text-gray-800" x-text="item.name"></p>
+                            <p class="truncate text-sm font-medium text-gray-800" :title="item.name" x-text="item.name"></p>
                             <div class="mt-0.5 flex items-center gap-1.5">
                                 <span class="inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-medium"
                                     :class="item.type === 'service' ? 'bg-warning-50 text-warning-700' : 'bg-gray-100 text-gray-500'"
@@ -98,6 +98,10 @@
         </button>
 
         <div class="mb-3 space-y-1">
+            <div class="flex items-center justify-between text-sm text-gray-500">
+                <span>Total Qty</span>
+                <span x-text="totalQty + ' item'"></span>
+            </div>
             <div class="flex items-center justify-between text-sm text-gray-500">
                 <span>Subtotal</span>
                 <span x-text="rupiah(total)"></span>

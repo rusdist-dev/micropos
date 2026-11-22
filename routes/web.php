@@ -88,6 +88,9 @@ Route::middleware(['auth'])->group(function () {
     // Riwayat Transaksi
     Route::get('/transactions', [TransactionController::class, 'index'])->name('transactions.index');
     Route::get('/transactions/{id}', [TransactionController::class, 'show'])->name('transactions.show');
+    Route::get('/transactions/{id}/edit', [TransactionController::class, 'edit'])
+        ->middleware('permission:transactions.edit')
+        ->name('transactions.edit');
 
     // Order Servis
     Route::get('/service-orders', [ServiceOrderController::class, 'index'])->name('service-orders.index');

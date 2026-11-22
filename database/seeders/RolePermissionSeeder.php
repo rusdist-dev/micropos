@@ -24,7 +24,7 @@ class RolePermissionSeeder extends Seeder
             'customers.view', 'customers.create', 'customers.edit', 'customers.delete',
             'services.view', 'services.create', 'services.edit', 'services.delete',
             'technicians.view', 'technicians.create', 'technicians.edit', 'technicians.delete',
-            'transactions.create', 'transactions.view', 'transactions.view-all',
+            'transactions.create', 'transactions.view', 'transactions.view-all', 'transactions.edit',
             'service-orders.view', 'service-orders.create', 'service-orders.edit', 'service-orders.complete', 'service-orders.cancel', 'service-orders.view-all',
             'users.view', 'users.create', 'users.edit', 'users.delete',
             'roles.view', 'roles.create', 'roles.edit', 'roles.delete',

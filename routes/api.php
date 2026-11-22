@@ -117,6 +117,7 @@ Route::middleware(['web', 'auth'])->group(function () {
     Route::get('/transactions/export', [TransactionController::class, 'export'])->middleware('permission:transactions.view');
     Route::get('/transactions/kasirs', [TransactionController::class, 'kasirs'])->middleware('permission:transactions.view-all');
     Route::get('/transactions/{transaction}', [TransactionController::class, 'show'])->middleware('permission:transactions.view');
+    Route::match(['put', 'patch'], '/transactions/{transaction}', [TransactionController::class, 'update'])->middleware('permission:transactions.edit');
 
     // Teknisi (master untuk order servis)
     Route::get('/technicians', [TechnicianController::class, 'index'])->middleware('permission:technicians.view');

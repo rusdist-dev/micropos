@@ -12,6 +12,11 @@ class TransactionController extends Controller
         return view('pages.transactions.index');
     }
 
+    public function edit(int $id): View
+    {
+        return view('pages.transactions.edit', ['id' => $id]);
+    }
+
     public function show(int $id): View
     {
         return view('pages.transactions.show', ['id' => $id]);

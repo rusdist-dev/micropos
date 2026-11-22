@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Enums\ItemType;
 use App\Enums\StockMovementType;
 use App\Models\Product;
+use App\Models\ReturnTransaction;
 use App\Models\Service;
 use App\Models\Transaction;
 use App\Models\User;
@@ -96,11 +97,95 @@ class TransactionService
     }
 
     /**
+     * Edit transaksi: kembalikan stok item lama, lalu terapkan item baru
+     * (validasi stok & harga ulang), hitung ulang total — satu DB transaction.
+     * Invoice, kasir, dan waktu transaksi tidak berubah.
+     *
+     * @param  array{customer_id?:int|null,discount?:int|float|null,payment_amount:int|float,note?:string|null,items:array<int,array<string,mixed>>}  $data
+     */
+    public function update(Transaction $transaction, array $data, User $editor): Transaction
+    {
+        return DB::transaction(function () use ($transaction, $data, $editor) {
+            $transaction = Transaction::lockForUpdate()->findOrFail($transaction->id);
+
+            // Transaksi yang sudah punya retur tidak boleh diubah (qty/harga item jadi tidak konsisten).
+            if (ReturnTransaction::where('transaction_id', $transaction->id)->exists()) {
+                throw ValidationException::withMessages([
+                    'transaction' => 'Transaksi ini sudah memiliki retur sehingga tidak dapat diedit.',
+                ]);
+            }
+
+            $note = "Koreksi transaksi {$transaction->invoice_number}";
+
+            // Kembalikan stok item produk lama (produk di-lock sebelum dimutasi).
+            $oldPrices = [];
+            foreach ($transaction->items()->get() as $old) {
+                if ($old->product_id === null) {
+                    continue;
+                }
+                // Harga snapshot lama dipertahankan bila produk + tipe harga tidak diubah.
+                $oldPrices[$old->product_id . '|' . $old->price_type_used] = (float) $old->price_snapshot;
+                $product = Product::lockForUpdate()->find($old->product_id);
+                if ($product) {
+                    $this->movements->apply($product, StockMovementType::Adjustment, (int) $old->qty, $transaction, $editor, $note);
+                }
+            }
+            $transaction->items()->delete();
+
+            $resolvedItems = [];
+            $subtotal = 0;
+            foreach ($data['items'] as $index => $item) {
+                $qty = (int) $item['qty'];
+                $resolved = $item['item_type'] === ItemType::Product->value
+                    ? $this->resolveProductItem($item, $qty, $index, $oldPrices[($item['product_id'] ?? '') . '|' . ($item['price_type'] ?? '')] ?? null)
+                    : $this->resolveServiceItem($item, $qty);
+                $subtotal += $resolved['subtotal'];
+                $resolvedItems[] = $resolved;
+            }
+
+            $discount = max(0.0, (float) ($data['discount'] ?? 0));
+            if ($discount > $subtotal) {
+                throw ValidationException::withMessages([
+                    'discount' => 'Diskon tidak boleh melebihi subtotal (' . number_format($subtotal, 0, ',', '.') . ').',
+                ]);
+            }
+
+            $total = $subtotal - $discount;
+            $payment = (float) $data['payment_amount'];
+            if ($payment < $total) {
+                throw ValidationException::withMessages([
+                    'payment_amount' => 'Jumlah bayar kurang dari total (' . number_format($total, 0, ',', '.') . ').',
+                ]);
+            }
+
+            $transaction->update([
+                'customer_id' => $data['customer_id'] ?? null,
+                'subtotal' => $subtotal,
+                'discount' => $discount,
+                'total' => $total,
+                'payment_amount' => $payment,
+                'change_amount' => $payment - $total,
+                'note' => $data['note'] ?? null,
+            ]);
+
+            foreach ($resolvedItems as $resolved) {
+                $transaction->items()->create($resolved['attributes']);
+
+                if ($resolved['product'] instanceof Product) {
+                    $this->movements->apply($resolved['product'], StockMovementType::Sale, -$resolved['attributes']['qty'], $transaction, $editor, $note);
+                }
+            }
+
+            return $transaction->load(['items', 'kasir', 'customer']);
+        });
+    }
+
+    /**
      * Resolusi item produk: ambil harga otoritatif dari DB & validasi stok.
      *
      * @return array{subtotal:float,attributes:array<string,mixed>,product:Product}
      */
-    protected function resolveProductItem(array $item, int $qty, int $index): array
+    protected function resolveProductItem(array $item, int $qty, int $index, ?float $priceOverride = null): array
     {
         /** @var Product $product */
         $product = Product::lockForUpdate()->find($item['product_id']);
@@ -124,7 +209,7 @@ class TransactionService
             ]);
         }
 
-        $price = (float) $priceRow->price;
+        $price = $priceOverride ?? (float) $priceRow->price;
 
         return [
             'subtotal' => $price * $qty,

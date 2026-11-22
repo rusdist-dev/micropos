@@ -84,6 +84,12 @@
                         <x-ui.button variant="outline" type="button" icon="printer" @click="$store.receipt.print(trx, 'thermal')">Struk 58mm</x-ui.button>
                         <x-ui.button type="button" icon="document-text" @click="$store.receipt.print(trx, 'a4')">Cetak A4</x-ui.button>
                     </div>
+                    @can('transactions.edit')
+                        <a href="{{ route('transactions.edit', $id) }}" class="mt-2 flex w-full items-center justify-center gap-2 rounded-lg border border-warning-300 py-2 text-sm font-medium text-warning-700 transition hover:bg-warning-50">
+                            <x-heroicon-o-pencil-square class="h-4 w-4" />
+                            Edit Transaksi
+                        </a>
+                    @endcan
                 </x-ui.card>
             </div>
         </div>

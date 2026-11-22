@@ -51,7 +51,7 @@
                             class="h-full w-full object-cover" x-on:error="p.image_url = null" />
                         <x-heroicon-o-cube x-show="!p.image_url" class="h-8 w-8" />
                     </div>
-                    <span class="line-clamp-2 text-xs font-medium text-gray-800" x-text="p.name"></span>
+                    <span class="line-clamp-2 text-xs font-medium text-gray-800" :title="p.name" x-text="p.name"></span>
                     <span class="mt-1 text-sm font-semibold text-primary-600" x-text="hasPrice(p, priceType) ? rupiah(p.prices[priceType]) : '—'"></span>
                     <span class="mt-0.5 text-[11px]" :class="p.stock <= p.min_stock ? 'text-danger-500' : 'text-gray-400'">
                         Stok: <span x-text="p.stock"></span>
@@ -75,7 +75,7 @@
                         <x-heroicon-o-cube x-show="!p.image_url" class="h-5 w-5" />
                     </span>
                     <div class="min-w-0 flex-1">
-                        <p class="truncate text-sm font-medium text-gray-800" x-text="p.name"></p>
+                        <p class="truncate text-sm font-medium text-gray-800" :title="p.name" x-text="p.name"></p>
                         <p class="text-[11px]" :class="p.stock <= p.min_stock ? 'text-danger-500' : 'text-gray-400'">
                             SKU: <span x-text="p.sku || '—'"></span> &middot; Stok: <span x-text="p.stock"></span>
                         </p>
