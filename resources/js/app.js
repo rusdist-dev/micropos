@@ -112,6 +112,9 @@ document.addEventListener('alpine:init', () => {
         money(v) {
             return 'Rp ' + Number(v || 0).toLocaleString('id-ID');
         },
+        qty(trx) {
+            return (trx.items || []).reduce((s, i) => s + (Number(i.qty) || 0), 0);
+        },
         date(trx) {
             return trx.created_at ? new Date(trx.created_at).toLocaleString('id-ID') : new Date().toLocaleString('id-ID');
         },
@@ -181,6 +184,7 @@ document.addEventListener('alpine:init', () => {
                 <hr>
                 <table>${rows}</table>
                 <hr>
+                <div class="row"><span>Total Qty</span><span>${this.qty(trx)}</span></div>
                 ${Number(trx.discount) > 0 ? `<div class="row"><span>Subtotal</span><span>${m(trx.subtotal)}</span></div>
                 <div class="row"><span>Diskon</span><span>- ${m(trx.discount)}</span></div>` : ''}
                 <div class="row bold"><span>TOTAL</span><span>${m(trx.total)}</span></div>
@@ -251,6 +255,7 @@ document.addEventListener('alpine:init', () => {
                     <tbody>${rows}</tbody>
                 </table>
                 <div class="totals">
+                    <div class="row"><span>Total Qty</span><span>${this.qty(trx)}</span></div>
                     ${Number(trx.discount) > 0 ? `<div class="row"><span>Subtotal</span><span>${m(trx.subtotal)}</span></div>
                     <div class="row"><span>Diskon</span><span>− ${m(trx.discount)}</span></div>` : ''}
                     <div class="row"><span>Total</span><span>${m(trx.total)}</span></div>

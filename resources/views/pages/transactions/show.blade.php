@@ -70,6 +70,7 @@
 
                 <x-ui.card title="Pembayaran">
                     <dl class="space-y-3 text-sm">
+                        <div class="flex justify-between"><dt class="text-gray-500">Total Qty</dt><dd class="text-gray-800" x-text="(trx?.items ?? []).reduce((s, i) => s + Number(i.qty || 0), 0) + ' item'"></dd></div>
                         <template x-if="trx?.discount > 0">
                             <div class="space-y-3">
                                 <div class="flex justify-between"><dt class="text-gray-500">Subtotal</dt><dd class="text-gray-800" x-text="window.rupiah(trx?.subtotal)"></dd></div>
